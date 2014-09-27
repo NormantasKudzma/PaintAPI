@@ -1,10 +1,10 @@
 package api;
 
-import java.awt.Graphics2D;
+import java.awt.Graphics;
 
 public class PaintGUI extends PaintBase {
 	
-	public PaintGUI(Graphics2D graphics){
+	public PaintGUI(Graphics graphics){
 		super(graphics);
 	}
 }
