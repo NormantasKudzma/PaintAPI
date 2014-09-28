@@ -6,6 +6,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
+import javax.swing.JButton;
 
 import api.PaintGUI;
 
@@ -20,7 +21,7 @@ public class PcDesign extends JFrame{
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
-		
+                
 	}
 	
 	public PcDesign(int frameW, int frameH){
