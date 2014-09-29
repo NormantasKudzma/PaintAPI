@@ -1,11 +1,11 @@
 package api;
 
-import java.awt.Graphics2D;
+import java.awt.Graphics;
 
 public class PaintBase {
-	protected Graphics2D g;
+	protected Graphics g;
 	
-	public PaintBase(Graphics2D graphics){
+	public PaintBase(Graphics graphics){
 		this.g = graphics;
 	}
 }
