@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -18,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.border.LineBorder;
 
+import api.PaintBase;
 import api.PaintGUI;
 
 public class PcDesign extends JFrame{
@@ -27,7 +29,7 @@ public class PcDesign extends JFrame{
 	private JMenuBar menuBar;
 	private JPanel drawPanel;
 	private JPanel topPanel;
-	private PaintGUI paint;
+	private PaintBase paint;
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -72,9 +74,7 @@ public class PcDesign extends JFrame{
 			public void mouseReleased(MouseEvent e) {}
 			
 			@Override
-			public void mousePressed(MouseEvent e) {
-				// STUB, draw				
-			}
+			public void mousePressed(MouseEvent e) {}
 			
 			@Override
 			public void mouseExited(MouseEvent e) {
@@ -88,7 +88,17 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				mousePressed(e);
+				paint.drawCenteredPixel(e.getX(), e.getY());
+			}
+		});
+		drawPanel.addMouseMotionListener(new MouseMotionListener() {
+			
+			@Override
+			public void mouseMoved(MouseEvent e) {}
+			
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				paint.drawCenteredPixel(e.getX(), e.getY());			
 			}
 		});
 	}
