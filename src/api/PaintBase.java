@@ -1,19 +1,20 @@
 package api;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Polygon;
 
 public class PaintBase {
-	protected Graphics g;
+	protected Graphics2D g;
 	protected Brush brush;
 	
-	public PaintBase(Graphics graphics){
+	public PaintBase(Graphics2D graphics){
 		this.g = graphics;
 		brush = new Brush();
 		setColor(Color.black);
 	}
-	
+
 	public Brush getBrush(){
 		return brush;
 	}
@@ -27,7 +28,15 @@ public class PaintBase {
 	}
 	
 	public void drawLine(int x1, int y1, int x2, int y2, Brush b){
-		// STUB, algoritma sugalvot reikia, kvieciant drawpixel kiekvienai pozicijai
+//		int hs = b.getSize() / 2;
+//		x1 -= hs;
+//		y1 -= hs;
+//		x2 -= hs;
+//		y2 -= hs;
+//		drawPixel(x1, y1, b);
+//		drawPixel(x2, y2, b);
+		g.setStroke(new BasicStroke(b.getSize()));
+		g.drawLine(x1, y1, x2, y2);
 	}
 	
 	public void drawPixel(int x, int y){

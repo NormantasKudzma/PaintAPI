@@ -3,6 +3,7 @@ package designs;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -20,7 +21,6 @@ import javax.swing.KeyStroke;
 import javax.swing.border.LineBorder;
 
 import api.PaintBase;
-import api.PaintGUI;
 
 public class PcDesign extends JFrame{
 	private static int frameWidth = 1280;
@@ -31,13 +31,16 @@ public class PcDesign extends JFrame{
 	private JPanel topPanel;
 	private PaintBase paint;
 	
+	private int lastX = 0;
+	private int lastY = 0;
+	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
 	}
 	
 	public PcDesign(int frameW, int frameH){
 		initFrame(frameW, frameH);
-		paint = new PaintGUI(drawPanel.getGraphics());
+		paint = new PaintBase((Graphics2D)drawPanel.getGraphics());
 	}
 	
 	private void initFrame(int w, int h){
@@ -74,7 +77,10 @@ public class PcDesign extends JFrame{
 			public void mouseReleased(MouseEvent e) {}
 			
 			@Override
-			public void mousePressed(MouseEvent e) {}
+			public void mousePressed(MouseEvent e) {
+				lastX = e.getX();
+				lastY = e.getY();
+			}
 			
 			@Override
 			public void mouseExited(MouseEvent e) {
@@ -92,13 +98,16 @@ public class PcDesign extends JFrame{
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
-			
 			@Override
 			public void mouseMoved(MouseEvent e) {}
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				paint.drawCenteredPixel(e.getX(), e.getY());			
+				int x = e.getX(), y = e.getY();
+				paint.drawLine(lastX, lastY, x, y);
+				lastX = x;
+				lastY = y;
+				
 			}
 		});
 	}
