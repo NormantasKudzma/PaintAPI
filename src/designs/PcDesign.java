@@ -150,11 +150,16 @@ public class PcDesign extends JFrame{
 				float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
 				float treshold = paint.getBrushSize() * 0.35f;
 				if (dist > treshold){
-					paint.drawCenteredLine(lastX, lastY, x, y);
+					paint.drawLine(lastX, lastY, x, y);
 				}
 				else {
 					paint.drawCenteredPixel(lastX, lastY);
 				}
+				// +DEBUG
+				/*drawPanel.getGraphics().setColor(Color.green);
+				drawPanel.getGraphics().fillRect(x - 2, y - 2, 4, 4);
+				drawPanel.getGraphics().setColor(Color.black);*/
+				// -DEBUG
 				lastX = x;
 				lastY = y;			
 			}
