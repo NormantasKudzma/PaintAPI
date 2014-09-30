@@ -4,32 +4,75 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.border.LineBorder;
+import javax.swing.colorchooser.AbstractColorChooserPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import api.CustomStroke;
 import api.PaintBase;
 
 public class PcDesign extends JFrame{
+	public class BrushShapeListener implements MouseListener {
+		private String shapeName;
+		
+		public BrushShapeListener(String shapeName){
+			this.shapeName = shapeName;
+		}
+		
+		public String getShapeName(){
+			return shapeName;
+		}
+		
+		@Override
+		public void mouseClicked(MouseEvent e) {}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {}
+
+		@Override
+		public void mouseExited(MouseEvent e) {}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			updateBrush(paint.getBrush().getSize(), shapeName);
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {}	
+	}
+	
 	private static int frameWidth = 1280;
 	private static int frameHeight = 720;
+	private static final String RES_PATH = "res/";
 	
 	private JMenuBar menuBar;
 	private JPanel drawPanel;
 	private JPanel topPanel;
 	private PaintBase paint;
+	private ClassLoader cl = getClass().getClassLoader();
+	private String currentShape = "rect";
 	
 	private int lastX = 0;
 	private int lastY = 0;
@@ -126,17 +169,81 @@ public class PcDesign extends JFrame{
 		colorPicker.setBorder(BorderFactory.createTitledBorder("Color"));
 		topPanel.add(colorPicker);
 		
+		final JColorChooser jcc = new JColorChooser(Color.black);
+		AbstractColorChooserPanel [] acc = jcc.getChooserPanels();
+		for (AbstractColorChooserPanel i : acc){
+			if (!i.getDisplayName().equals("Swatches")){
+				jcc.removeChooserPanel(i);
+			}
+		}
+		jcc.setMaximumSize(new Dimension((int)(w * 0.48), (int)(maxHeight * 0.95)));
+		jcc.setPreviewPanel(new JPanel());
+		jcc.getSelectionModel().addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				Color c = jcc.getColor();
+				paint.setColor(c);
+			}
+		});
+		colorPicker.add(jcc);
+		
 		// Brush size picker
 		JPanel brushSizePicker = new JPanel();
 		brushSizePicker.setMaximumSize(new Dimension((int)(w * 0.25), maxHeight));
 		brushSizePicker.setBorder(BorderFactory.createTitledBorder("Size"));
 		topPanel.add(brushSizePicker);
 		
+		Integer [] sizes = {1, 2, 4, 8, 12, 16, 24};
+		JComboBox<Integer> sizebox = new JComboBox<Integer>(sizes);
+		sizebox.setSelectedIndex(2);
+		sizebox.setEditable(true);
+		sizebox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {				
+				try {
+					JComboBox<Integer> c = (JComboBox) e.getSource();
+					int size = (Integer)c.getSelectedItem();
+					updateBrush(size, currentShape);
+				}
+				catch (Exception ex){
+					// Input was not an integer, do nothing, supposedly
+					// ex.printStackTrace();
+				}
+			}
+		});
+		brushSizePicker.add(sizebox);
+		
 		// Brush shape picker
 		JPanel brushShapePicker = new JPanel();
+		brushShapePicker.setLayout(new GridLayout(2, 0, 5, 5));
 		brushShapePicker.setMaximumSize(new Dimension((int)(w * 0.25), maxHeight));
 		brushShapePicker.setBorder(BorderFactory.createTitledBorder("Shape"));
 		topPanel.add(brushShapePicker);
+			
+		JLabel rect = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "rect.png")));
+		rect.addMouseListener(new BrushShapeListener("rect"));
+		brushShapePicker.add(rect);
+		
+		JLabel circle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "circle.png")));
+		circle.addMouseListener(new BrushShapeListener("circle"));
+		brushShapePicker.add(circle);
+	}
+	
+	private void updateBrush(int size, String type){
+		paint.setSize(size);
+		currentShape = type;
+		switch(type){
+			case "rect":{
+				paint.getBrush().setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.5f));
+				break;
+			}
+			case "circle":{
+				paint.getBrush().setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.5f));
+				break;
+			}		
+		}
 	}
 	
 	private void configureMenuBar(){

@@ -4,6 +4,9 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 
 public class PaintBase {
 	protected Graphics2D g;
@@ -28,14 +31,7 @@ public class PaintBase {
 	}
 	
 	public void drawLine(int x1, int y1, int x2, int y2, Brush b){
-//		int hs = b.getSize() / 2;
-//		x1 -= hs;
-//		y1 -= hs;
-//		x2 -= hs;
-//		y2 -= hs;
-//		drawPixel(x1, y1, b);
-//		drawPixel(x2, y2, b);
-		g.setStroke(new BasicStroke(b.getSize()));
+		g.setStroke(b.getCustomStroke());
 		g.drawLine(x1, y1, x2, y2);
 	}
 	
@@ -44,13 +40,19 @@ public class PaintBase {
 	}
 	
 	public void drawPixel(int x, int y, Brush b){
-		Polygon p = b.getShape().getPolygon(x, y, b.getSize());
-		g.fillPolygon(p);
+		Shape s = b.getCustomStroke().getShape();
+		g.translate(x, y);
+		g.fill(s);
+		g.translate(-x, -y);		
 	}
 	
 	public void setColor(Color c){
 		brush.setColor(c);
 		g.setColor(c);
+	}
+	
+	public void setSize(int size){
+		brush.setSize(size);
 	}
 	
 	public Color getColor(){

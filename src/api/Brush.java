@@ -1,28 +1,32 @@
 package api;
 
 import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
 
 public class Brush {
+	private static final CustomStroke DEFAULT_STROKE = new CustomStroke(new Rectangle2D.Float(0, 0, 4, 4), 1.75f);
+	
 	private int size;
 	private Color color;
-	private PolygonBase shape;
+	private CustomStroke stroke;
 	
 	public Brush(){
-		this(4, Color.black, new RectPolygon());
+		this(4, Color.black, DEFAULT_STROKE);
 	}
 	
 	public Brush(int size){
-		this(size, Color.black, new RectPolygon());
+		this(size, Color.black, DEFAULT_STROKE);
 	}
 	
 	public Brush(int size, Color c){
-		this(size, c, new RectPolygon());
+		this(size, c, DEFAULT_STROKE);
 	}
 	
-	public Brush(int size, Color color, PolygonBase shape){
-		this.size = size;
-		this.setColor(color);
-		this.setShape(shape);
+	public Brush(int size, Color color, CustomStroke cc){
+		setSize(size);
+		setColor(color);
+		setCustomStroke(cc);
 	}
 	
 	public void setSize(int size){
@@ -41,11 +45,11 @@ public class Brush {
 		this.color = color;
 	}
 
-	public PolygonBase getShape() {
-		return shape;
+	public CustomStroke getCustomStroke() {
+		return stroke;
 	}
 
-	public void setShape(PolygonBase shape) {
-		this.shape = shape;
+	public void setCustomStroke(CustomStroke cc) {
+		this.stroke = cc;
 	}
 }
