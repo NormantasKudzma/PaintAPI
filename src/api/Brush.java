@@ -5,23 +5,12 @@ import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 
 public class Brush {
-	private static final CustomStroke DEFAULT_STROKE = new CustomStroke(new Rectangle2D.Float(0, 0, 4, 4), 1.75f);
-	
 	private int size;
 	private Color color;
 	private CustomStroke stroke;
 	
-	public Brush(){
-		this(4, Color.black, DEFAULT_STROKE);
-	}
-	
-	public Brush(int size){
-		this(size, Color.black, DEFAULT_STROKE);
-	}
-	
-	public Brush(int size, Color c){
-		this(size, c, DEFAULT_STROKE);
-	}
+	// Only for internal use in PaintBase class
+	public Brush(){}
 	
 	public Brush(int size, Color color, CustomStroke cc){
 		setSize(size);

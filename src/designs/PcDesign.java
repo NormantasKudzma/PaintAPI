@@ -147,10 +147,16 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				int x = e.getX(), y = e.getY();
-				paint.drawLine(lastX, lastY, x, y);
+				float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
+				float treshold = paint.getBrushSize() * 0.35f;
+				if (dist > treshold){
+					paint.drawCenteredLine(lastX, lastY, x, y);
+				}
+				else {
+					paint.drawCenteredPixel(lastX, lastY);
+				}
 				lastX = x;
-				lastY = y;
-				
+				lastY = y;			
 			}
 		});
 	}
@@ -176,14 +182,13 @@ public class PcDesign extends JFrame{
 				jcc.removeChooserPanel(i);
 			}
 		}
-		jcc.setMaximumSize(new Dimension((int)(w * 0.48), (int)(maxHeight * 0.95)));
 		jcc.setPreviewPanel(new JPanel());
 		jcc.getSelectionModel().addChangeListener(new ChangeListener() {
 			
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				Color c = jcc.getColor();
-				paint.setColor(c);
+				paint.setBrushColor(c);
 			}
 		});
 		colorPicker.add(jcc);
@@ -232,15 +237,15 @@ public class PcDesign extends JFrame{
 	}
 	
 	private void updateBrush(int size, String type){
-		paint.setSize(size);
+		paint.setBrushSize(size);
 		currentShape = type;
 		switch(type){
 			case "rect":{
-				paint.getBrush().setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.5f));
+				paint.setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.5f));
 				break;
 			}
 			case "circle":{
-				paint.getBrush().setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.5f));
+				paint.setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.5f));
 				break;
 			}		
 		}
