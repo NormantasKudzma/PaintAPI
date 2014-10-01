@@ -3,9 +3,9 @@ package designs;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -13,6 +13,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -26,7 +27,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import javax.swing.border.LineBorder;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -72,6 +72,7 @@ public class PcDesign extends JFrame{
 	private JPanel drawPanel;
 	private JPanel topPanel;
 	private PaintBase paint;
+	private BufferedImage drawing;
 	private ClassLoader cl = getClass().getClassLoader();
 	private String currentShape = "rect";
 	
@@ -84,7 +85,7 @@ public class PcDesign extends JFrame{
 	
 	public PcDesign(int frameW, int frameH){
 		initFrame(frameW, frameH);
-		paint = new PaintBase((Graphics2D)drawPanel.getGraphics());
+		paint = new PaintBase((Graphics2D)drawing.getGraphics());		
 	}
 	
 	private void initFrame(int w, int h){
@@ -111,7 +112,13 @@ public class PcDesign extends JFrame{
 	}
 	
 	private void initDrawPanel(){
-		drawPanel = new JPanel();
+		drawPanel = new JPanel(){
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				g.drawImage(drawing, 0, 0, null);
+			}
+		};
 		drawPanel.setMaximumSize(new Dimension(frameWidth, (int)(0.75 * frameHeight)));
 		drawPanel.setBackground(Color.white);
 		drawPanel.addMouseListener(new MouseListener() {
@@ -138,6 +145,7 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				paint.drawCenteredPixel(e.getX(), e.getY());
+				drawPanel.repaint();
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
@@ -163,8 +171,11 @@ public class PcDesign extends JFrame{
 				// -DEBUG
 				lastX = x;
 				lastY = y;
+				drawPanel.repaint();
 			}
 		});
+	
+		drawing = new BufferedImage(frameWidth, (int)(0.75 * frameHeight), BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	private void initTopPanel(){
