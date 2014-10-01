@@ -10,15 +10,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-<<<<<<< HEAD
 import java.awt.image.BufferedImage;
 import java.awt.Component;
 import javax.imageio.ImageIO;
-=======
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
->>>>>>> origin/nkbranch
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -33,17 +30,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.border.LineBorder;
-<<<<<<< HEAD
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import java.io.File;
-=======
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
->>>>>>> origin/nkbranch
 
 import api.CustomStroke;
 import api.PaintBase;
@@ -85,19 +79,16 @@ public class PcDesign extends JFrame{
 	private JMenuBar menuBar;
 	private JPanel drawPanel;
 	private JPanel topPanel;
-<<<<<<< HEAD
-	private PaintGUI paint;
+	//private PaintGUI paint;
         
         File filetosave;
         File filetoload;
-=======
 	private PaintBase paint;
 	private ClassLoader cl = getClass().getClassLoader();
 	private String currentShape = "rect";
 	
 	private int lastX = 0;
 	private int lastY = 0;
->>>>>>> origin/nkbranch
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -280,12 +271,18 @@ public class PcDesign extends JFrame{
 	}
         
         // Screenshot of drawPanel is saved to BufferedImage and BufferedImage later is saved as an image file
-        private static BufferedImage getScreenShot(Component component){
-            BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        private static Graphics2D getScreenShot(JPanel panel){
+            //BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+            //BufferedImage image = (BufferedImage) component;
+            //component.paint(image.getGraphics());
             
-            component.paint(image.getGraphics());
-            
-            return image;
+            //return image;
+            int w = panel.getWidth();
+            int h = panel.getHeight();
+            BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = bi.createGraphics();
+            panel.printAll(g);
+            return g;
         }
 	
 	private void configureMenuBar(){
