@@ -316,8 +316,40 @@ public class PcDesign extends JFrame{
         
         // File is loaded to drawPanel
         private void setImage(BufferedImage image){
-            drawing = image;
-            drawPanel.repaint();
+            if (drawing != null){
+			JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to load a different image?");
+			int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
+			if (result == JOptionPane.NO_OPTION){
+				return;
+			}
+			if (drawPanel != null){
+				drawContainerPanel.remove(drawPanel);
+				drawContainerPanel.revalidate();
+				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			}
+			drawing = image;
+                        
+                        NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.getDefault());
+                        DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
+                        decimalFormat.setGroupingUsed(false);
+                        JFormattedTextField x = new JFormattedTextField(decimalFormat);
+                        x.setText("" + imgW);
+                        JFormattedTextField y = new JFormattedTextField(decimalFormat);
+                        y.setText("" + imgH);
+
+                        if (result == JOptionPane.YES_OPTION){
+                            int w = Integer.parseInt(x.getText());
+                            int h = Integer.parseInt(y.getText());
+                            if (w < 0 || h < 0){
+                                    // Invalid size, throw error?
+                                    return;
+                            }
+                            w = w > maxImgW ? maxImgW : w;
+                            h = h > maxImgH ? maxImgH : h;
+                            initDrawPanel(w, h);
+                            createImageFrom(image);
+                        }
+		}
         }
 	
 	private void configureMenuBar(){
@@ -366,7 +398,7 @@ public class PcDesign extends JFrame{
 			}
 		});
 		KeyStroke ctrlO = KeyStroke.getKeyStroke("control O");
-	    loadFile.setAccelerator(ctrlO);
+                loadFile.setAccelerator(ctrlO);
 		file.add(loadFile);
 		
 		JMenuItem saveFile = new JMenuItem("Save");
