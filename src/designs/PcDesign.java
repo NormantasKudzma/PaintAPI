@@ -271,7 +271,7 @@ public class PcDesign extends JFrame{
 	}
         
         // Screenshot of drawPanel is saved to BufferedImage and BufferedImage later is saved as an image file
-        private static Graphics2D getScreenShot(JPanel panel){
+        private static BufferedImage getScreenShot(JPanel panel){
             //BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
             //BufferedImage image = (BufferedImage) component;
             //component.paint(image.getGraphics());
@@ -282,7 +282,7 @@ public class PcDesign extends JFrame{
             BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = bi.createGraphics();
             panel.printAll(g);
-            return g;
+            return bi;
         }
 	
 	private void configureMenuBar(){
