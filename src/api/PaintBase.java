@@ -4,10 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 public class PaintBase {
@@ -18,32 +14,20 @@ public class PaintBase {
 	protected Graphics2D g;
 	protected Brush brush;
 	
-	public PaintBase(Graphics2D graphics){
-		this.g = graphics;
+	public PaintBase(){
 		brush = new Brush();
-		RenderingHints r = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-											  RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setRenderingHints(r);
-		setBrushColor(DEFAULT_COLOR);
-		setBrushSize(DEFAULT_SIZE);
-		setCustomStroke(DEFAULT_STROKE);
-	}
-
-	public Brush getBrush(){
-		return brush;
+		brush.setColor(DEFAULT_COLOR);
+		brush.setSize(DEFAULT_SIZE);
+		brush.setCustomStroke(DEFAULT_STROKE);
 	}
 	
-	public void setBrush(Brush brush){
-		this.brush = brush;
+	public PaintBase(Graphics2D graphics){
+		this();
+		setGraphics(graphics);	
 	}
 	
 	public void drawLine(int x1, int y1, int x2, int y2){
-		
-		
-		//g.setStroke(new BasicStroke(brush.getSize()/*, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL*/));
-		g.drawLine(x1, y1, x2, y2);
-		//g.setStroke(brush.getCustomStroke());
-	
+		g.drawLine(x1, y1, x2, y2);	
 	}
 	
 	public void drawVCenteredLine(int x1, int y1, int x2, int y2){
@@ -66,21 +50,24 @@ public class PaintBase {
 		g.translate(-x, -y);		
 	}
 	
-	public void setBrushColor(Color c){
-		brush.setColor(c);
-		g.setColor(c);
-	}
-	
-	public void setBrushSize(int size){
-		brush.setSize(size);
-	}
+	public void drawCenteredPixel(int x, int y){
+		int hs = brush.getSize() / 2;
+		x -= hs;
+		y -= hs;
+		drawPixel(x, y);
+	}	
 	
 	public void setCustomStroke(CustomStroke cc){
 		g.setStroke(cc);
 		brush.setCustomStroke(cc);
 	}
 	
-	public Color getColor(){
+	public void setBrushColor(Color c){
+		brush.setColor(c);
+		g.setColor(c);
+	}
+	
+	public Color getBrushColor(){
 		return brush.getColor();
 	}
 	
@@ -88,14 +75,29 @@ public class PaintBase {
 		return brush.getSize();
 	}
 	
-	public void drawCenteredPixel(int x, int y){
-		int hs = brush.getSize() / 2;
-		if (x - hs >= 0){
-			x -= hs;
-		}
-		if (y - hs >= 0){
-			y -= hs;
-		}
-		drawPixel(x, y);
+	public void setBrushSize(int size){
+		brush.setSize(size);
+	}
+	
+	public Brush getBrush(){
+		return brush;
+	}
+	
+	public void setBrush(Brush brush){
+		this.brush = brush;
+	}
+	
+	public Graphics2D getGraphics(){
+		return g;
+	}
+	
+	public void setGraphics(Graphics2D g){
+		this.g = g;
+		RenderingHints r = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+				  RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHints(r);
+		setBrushColor(brush.getColor());
+		setBrushSize(brush.getSize());
+		setCustomStroke(brush.getCustomStroke());
 	}
 }

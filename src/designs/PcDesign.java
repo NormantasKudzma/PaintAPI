@@ -1,8 +1,10 @@
 package designs;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -14,17 +16,23 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
@@ -67,14 +75,21 @@ public class PcDesign extends JFrame{
 	private static int frameWidth = 1280;
 	private static int frameHeight = 720;
 	private static final String RES_PATH = "res/";
+	private static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
 	
 	private JMenuBar menuBar;
+	private JPanel drawContainerPanel;
 	private JPanel drawPanel;
 	private JPanel topPanel;
 	private PaintBase paint;
 	private BufferedImage drawing;
 	private ClassLoader cl = getClass().getClassLoader();
 	private String currentShape = "rect";
+	
+	private int maxImgW = 0;
+	private int maxImgH = 0;
+	private int imgW = 0;
+	private int imgH = 0;
 	
 	private int lastX = 0;
 	private int lastY = 0;
@@ -85,7 +100,8 @@ public class PcDesign extends JFrame{
 	
 	public PcDesign(int frameW, int frameH){
 		initFrame(frameW, frameH);
-		paint = new PaintBase((Graphics2D)drawing.getGraphics());		
+		paint = new PaintBase();
+		initDrawPanel(imgW, imgH);
 	}
 	
 	private void initFrame(int w, int h){
@@ -105,21 +121,28 @@ public class PcDesign extends JFrame{
 		
 		initTopPanel();
 		add(topPanel);		
-				
-		initDrawPanel();
-		add(drawPanel);
+					
+		drawContainerPanel = new JPanel();
+		drawContainerPanel.setMaximumSize(new Dimension(frameWidth, (int)(frameHeight * 0.75f)));
+		add(drawContainerPanel);
+		maxImgW = imgW = (int)(frameWidth * 0.95f);
+		maxImgH = imgH = (int)(frameHeight * 0.7f);
+		
 		configureMenuBar();
 	}
 	
-	private void initDrawPanel(){
+	private void initDrawPanel(int w, int h){
+		imgW = w;
+		imgH = h;
+	
 		drawPanel = new JPanel(){
 			@Override
 			protected void paintComponent(Graphics g) {
 				super.paintComponent(g);
 				g.drawImage(drawing, 0, 0, null);
 			}
-		};
-		drawPanel.setMaximumSize(new Dimension(frameWidth, (int)(0.75 * frameHeight)));
+		};		
+		drawPanel.setPreferredSize(new Dimension(imgW, imgH));
 		drawPanel.setBackground(Color.white);
 		drawPanel.addMouseListener(new MouseListener() {
 			
@@ -164,18 +187,16 @@ public class PcDesign extends JFrame{
 				else {
 					paint.drawCenteredPixel(lastX, lastY);
 				}
-				// +DEBUG
-				/*paint.setBrushColor(Color.green);
-				paint.drawCenteredPixel(x-1, y-1);
-				paint.setBrushColor(Color.black);*/
-				// -DEBUG
 				lastX = x;
 				lastY = y;
 				drawPanel.repaint();
 			}
 		});
-	
-		drawing = new BufferedImage(frameWidth, (int)(0.75 * frameHeight), BufferedImage.TYPE_INT_ARGB);
+		drawContainerPanel.add(drawPanel, BorderLayout.CENTER);
+		drawContainerPanel.revalidate();
+				
+		createNewImage(imgW, imgH);
+		drawContainerPanel.repaint();
 	}
 	
 	private void initTopPanel(){
@@ -277,7 +298,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// STUB, create new file
+				promptCreateNewImage();
 			}
 		});
 		KeyStroke ctrlN = KeyStroke.getKeyStroke("control N");
@@ -308,6 +329,60 @@ public class PcDesign extends JFrame{
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
+	}
+	
+	public void createNewImage(int w, int h){
+		imgW = w;
+		imgH = h;
+		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
+		if (paint != null){
+			paint.setGraphics((Graphics2D) drawing.getGraphics());
+		}
+		drawPanel.repaint();
+	}
+	
+	public void promptCreateNewImage(){
+		if (drawing != null){
+			JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to create a new image?");
+			int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
+			if (result == JOptionPane.NO_OPTION){
+				return;
+			}
+			if (drawPanel != null){
+				drawContainerPanel.remove(drawPanel);
+				drawContainerPanel.revalidate();
+				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			}
+			drawing = null;
+		}
+		NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.getDefault());
+		DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
+		decimalFormat.setGroupingUsed(false);
+		JFormattedTextField x = new JFormattedTextField(decimalFormat);
+		x.setText("" + imgW);
+		JFormattedTextField y = new JFormattedTextField(decimalFormat);
+		y.setText("" + imgH);
+		
+		JLabel xLabel = new JLabel("Image width ");
+		JLabel yLabel = new JLabel("Image height ");
+		
+		JPanel p = new JPanel();
+		p.setLayout(new GridLayout(2, 2));
+		p.add(xLabel); p.add(x);
+		p.add(yLabel); p.add(y);
+		
+		int result = JOptionPane.showConfirmDialog(null, p, "Create new image", JOptionPane.OK_CANCEL_OPTION);
+		if (result == JOptionPane.OK_OPTION){
+			int w = Integer.parseInt(x.getText());
+			int h = Integer.parseInt(y.getText());
+			if (w < 0 || h < 0){
+				// Invalid size, throw error?
+				return;
+			}
+			w = w > maxImgW ? maxImgW : w;
+			h = h > maxImgH ? maxImgH : h;
+			initDrawPanel(w, h);
+		}				
 	}
 	
 	public static void main(String [] args){
