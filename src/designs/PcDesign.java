@@ -12,6 +12,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.awt.Component;
+import javax.imageio.ImageIO;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
@@ -35,6 +38,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.border.LineBorder;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileFilter;
+
+import java.io.File;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -82,6 +91,11 @@ public class PcDesign extends JFrame{
 	private JPanel drawContainerPanel;
 	private JPanel drawPanel;
 	private JPanel topPanel;
+	//private PaintGUI paint;
+        
+        File filetosave;
+        File filetoload;
+        Filters f = new Filters();
 	private PaintBase paint;
 	private BufferedImage drawing;
 	private ClassLoader cl = getClass().getClassLoader();
@@ -97,6 +111,7 @@ public class PcDesign extends JFrame{
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
+                
 	}
 	
 	public PcDesign(int frameW, int frameH){
@@ -297,6 +312,54 @@ public class PcDesign extends JFrame{
 			}
 		}
 	}
+        
+        // Screenshot of drawPanel is saved to BufferedImage and BufferedImage later is saved as an image file
+        private static BufferedImage getScreenShot(JPanel panel){
+            int w = panel.getWidth();
+            int h = panel.getHeight();
+            BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = bi.createGraphics();
+            panel.printAll(g);
+            return bi;
+        }
+        
+        // File is loaded to drawPanel
+        private void setImage(BufferedImage image){
+            if (drawing != null){
+			JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to load a different image?");
+			int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
+			if (result == JOptionPane.NO_OPTION){
+				return;
+			}
+			if (drawPanel != null){
+				drawContainerPanel.remove(drawPanel);
+				drawContainerPanel.revalidate();
+				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			}
+			drawing = image;
+                        
+                        NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.getDefault());
+                        DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
+                        decimalFormat.setGroupingUsed(false);
+                        JFormattedTextField x = new JFormattedTextField(decimalFormat);
+                        x.setText("" + imgW);
+                        JFormattedTextField y = new JFormattedTextField(decimalFormat);
+                        y.setText("" + imgH);
+
+                        if (result == JOptionPane.YES_OPTION){
+                            int w = Integer.parseInt(x.getText());
+                            int h = Integer.parseInt(y.getText());
+                            if (w < 0 || h < 0){
+                                    // Invalid size, throw error?
+                                    return;
+                            }
+                            w = w > maxImgW ? maxImgW : w;
+                            h = h > maxImgH ? maxImgH : h;
+                            initDrawPanel(w, h);
+                            createImageFrom(image);
+                        }
+		}
+        }
 	
 	private void configureMenuBar(){
 		JMenu file = new JMenu("File..");
@@ -319,12 +382,32 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// STUB, load file
+				JFileChooser c = new JFileChooser();
+                                
+                                // Add extension filters to JFileChooser
+                                c.addChoosableFileFilter(f. new jpgSaveFilter());
+                                c.addChoosableFileFilter(f. new pngSaveFilter());
+                                
+                                c.setDialogTitle("Load drawing");
+                                int rVal = c.showOpenDialog(PcDesign.this);
 				
+                                // Open pressed
+                                if(rVal==JFileChooser.APPROVE_OPTION) {
+                                    filetoload = c.getSelectedFile();
+                                    BufferedImage img = null;
+                                    
+                                    try{
+                                        img = ImageIO.read(filetoload);
+                                        setImage(img);
+                                    }
+                                    catch (Exception y){
+                                        y.printStackTrace();
+                                    }
+                                }
 			}
 		});
 		KeyStroke ctrlO = KeyStroke.getKeyStroke("control O");
-	    loadFile.setAccelerator(ctrlO);
+                loadFile.setAccelerator(ctrlO);
 		file.add(loadFile);
 		
 		JMenuItem saveFile = new JMenuItem("Save");
@@ -332,7 +415,64 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// STUB, save file
+				JFileChooser c = new JFileChooser(){
+                                    
+                                    // Confirmation box if file with the same name already exists
+                                    @Override
+                                    public void approveSelection(){
+                                        File f = getSelectedFile();
+                                        if(f.exists() && getDialogType() == SAVE_DIALOG){
+                                            int result = JOptionPane.showConfirmDialog(this,"The file exists, overwrite?","Existing file",JOptionPane.YES_NO_CANCEL_OPTION);
+                                            switch(result){
+                                                case JOptionPane.YES_OPTION:
+                                                    super.approveSelection();
+                                                    return;
+                                                case JOptionPane.NO_OPTION:
+                                                    return;
+                                                case JOptionPane.CLOSED_OPTION:
+                                                    return;
+                                                case JOptionPane.CANCEL_OPTION:
+                                                    cancelSelection();
+                                                    return;
+                                            }
+                                        }
+                                        super.approveSelection();
+                                    }   
+                                };
+                                
+                                // Add extension filters to JFileChooser
+                                c.addChoosableFileFilter(f. new jpgSaveFilter());
+                                c.addChoosableFileFilter(f. new pngSaveFilter());
+                                
+                                c.setDialogTitle("Save drawing to current device");
+                                int rVal = c.showSaveDialog(PcDesign.this);
+                                
+                                // Save pressed
+                                if(rVal==JFileChooser.APPROVE_OPTION) {
+                                    String ext="png";
+
+                                    String extension=c.getFileFilter().getDescription();
+
+                                    if(extension.equals("*.jpg,*.JPG"))
+                                    { 
+                                        ext="jpg";
+                                    }
+                                    
+                                    if(extension.equals("*.png,*.PNG"))
+                                    { 
+                                        ext="png";
+                                    }
+                                    
+                                    BufferedImage img = getScreenShot(drawPanel);
+                                    filetosave = c.getSelectedFile();
+                                    
+                                    try{
+                                        ImageIO.write(img, ext, filetosave);
+                                    }
+                                    catch (Exception y){
+                                        y.printStackTrace();
+                                    }
+                                }
 			}
 		});
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
