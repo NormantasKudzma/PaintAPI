@@ -5,6 +5,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -112,7 +113,6 @@ public class PcDesign extends JFrame{
 	private void initDrawPanel(){
 		drawPanel = new JPanel();
 		drawPanel.setMaximumSize(new Dimension(frameWidth, (int)(0.75 * frameHeight)));
-		drawPanel.setBorder(new LineBorder(Color.black, 2));
 		drawPanel.setBackground(Color.white);
 		drawPanel.addMouseListener(new MouseListener() {
 			
@@ -120,7 +120,7 @@ public class PcDesign extends JFrame{
 			public void mouseReleased(MouseEvent e) {}
 			
 			@Override
-			public void mousePressed(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {			
 				lastX = e.getX();
 				lastY = e.getY();
 			}
@@ -148,20 +148,21 @@ public class PcDesign extends JFrame{
 			public void mouseDragged(MouseEvent e) {
 				int x = e.getX(), y = e.getY();
 				float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
-				float treshold = paint.getBrushSize() * 0.35f;
+				float treshold = paint.getBrushSize() * 0.15f;
 				if (dist > treshold){
-					paint.drawLine(lastX, lastY, x, y);
+					paint.drawCenteredLine(lastX, lastY, x, y);
+
 				}
 				else {
 					paint.drawCenteredPixel(lastX, lastY);
 				}
 				// +DEBUG
-				/*drawPanel.getGraphics().setColor(Color.green);
-				drawPanel.getGraphics().fillRect(x - 2, y - 2, 4, 4);
-				drawPanel.getGraphics().setColor(Color.black);*/
+				/*paint.setBrushColor(Color.green);
+				paint.drawCenteredPixel(x-1, y-1);
+				paint.setBrushColor(Color.black);*/
 				// -DEBUG
 				lastX = x;
-				lastY = y;			
+				lastY = y;
 			}
 		});
 	}
@@ -246,11 +247,11 @@ public class PcDesign extends JFrame{
 		currentShape = type;
 		switch(type){
 			case "rect":{
-				paint.setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.5f));
+				paint.setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.25f));
 				break;
 			}
 			case "circle":{
-				paint.setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.5f));
+				paint.setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.25f));
 				break;
 			}		
 		}

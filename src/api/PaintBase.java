@@ -1,11 +1,13 @@
 package api;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
+import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 public class PaintBase {
@@ -19,6 +21,9 @@ public class PaintBase {
 	public PaintBase(Graphics2D graphics){
 		this.g = graphics;
 		brush = new Brush();
+		RenderingHints r = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+											  RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHints(r);
 		setBrushColor(DEFAULT_COLOR);
 		setBrushSize(DEFAULT_SIZE);
 		setCustomStroke(DEFAULT_STROKE);
@@ -33,7 +38,17 @@ public class PaintBase {
 	}
 	
 	public void drawLine(int x1, int y1, int x2, int y2){
+		
+		
+		//g.setStroke(new BasicStroke(brush.getSize()/*, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL*/));
 		g.drawLine(x1, y1, x2, y2);
+		//g.setStroke(brush.getCustomStroke());		
+	}
+	
+	public void drawVCenteredLine(int x1, int y1, int x2, int y2){
+		int hs = brush.getSize() / 2;
+		y1 -= hs; y2 -= hs;
+		drawLine(x1, y1, x2, y2);
 	}
 	
 	public void drawCenteredLine(int x1, int y1, int x2, int y2){
@@ -42,13 +57,9 @@ public class PaintBase {
 		x2 -= hs; y2 -= hs;
 		drawLine(x1, y1, x2, y2);
 	}
-	
+		
 	public void drawPixel(int x, int y){
-		drawPixel(x, y, brush);
-	}
-	
-	public void drawPixel(int x, int y, Brush b){
-		Shape s = b.getCustomStroke().getShape();
+		Shape s = brush.getCustomStroke().getShape();
 		g.translate(x, y);
 		g.fill(s);
 		g.translate(-x, -y);		

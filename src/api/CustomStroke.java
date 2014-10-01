@@ -60,12 +60,10 @@ public class CustomStroke implements Stroke {
 				float dist = (float)Math.sqrt(dx * dx + dy * dy);
 				if (dist >= next){
 					float r = 1.0f / dist;
-					float angle = (float)Math.atan2(dy, dx);
 					while (dist >= next){
 						float x = lastX + next * dx * r;
 						float y = lastY + next * dy * r;
 						transform.setToTranslation(x, y);
-						transform.rotate(angle);
 						result.append(transform.createTransformedShape(ss), false);
 						next += spc;
 					}
