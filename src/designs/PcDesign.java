@@ -3,9 +3,9 @@ package designs;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -83,7 +84,9 @@ public class PcDesign extends JFrame{
         
         File filetosave;
         File filetoload;
+        Filters f = new Filters();
 	private PaintBase paint;
+	private BufferedImage drawing;
 	private ClassLoader cl = getClass().getClassLoader();
 	private String currentShape = "rect";
 	
@@ -97,7 +100,7 @@ public class PcDesign extends JFrame{
 	
 	public PcDesign(int frameW, int frameH){
 		initFrame(frameW, frameH);
-		paint = new PaintBase((Graphics2D)drawPanel.getGraphics());
+		paint = new PaintBase((Graphics2D)drawing.getGraphics());		
 	}
 	
 	private void initFrame(int w, int h){
@@ -124,7 +127,13 @@ public class PcDesign extends JFrame{
 	}
 	
 	private void initDrawPanel(){
-		drawPanel = new JPanel();
+		drawPanel = new JPanel(){
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				g.drawImage(drawing, 0, 0, null);
+			}
+		};
 		drawPanel.setMaximumSize(new Dimension(frameWidth, (int)(0.75 * frameHeight)));
 		drawPanel.setBackground(Color.white);
 		drawPanel.addMouseListener(new MouseListener() {
@@ -151,6 +160,7 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				paint.drawCenteredPixel(e.getX(), e.getY());
+				drawPanel.repaint();
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
@@ -176,8 +186,11 @@ public class PcDesign extends JFrame{
 				// -DEBUG
 				lastX = x;
 				lastY = y;
+				drawPanel.repaint();
 			}
 		});
+	
+		drawing = new BufferedImage(frameWidth, (int)(0.75 * frameHeight), BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	private void initTopPanel(){
@@ -272,17 +285,18 @@ public class PcDesign extends JFrame{
         
         // Screenshot of drawPanel is saved to BufferedImage and BufferedImage later is saved as an image file
         private static BufferedImage getScreenShot(JPanel panel){
-            //BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-            //BufferedImage image = (BufferedImage) component;
-            //component.paint(image.getGraphics());
-            
-            //return image;
             int w = panel.getWidth();
             int h = panel.getHeight();
-            BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = bi.createGraphics();
             panel.printAll(g);
             return bi;
+        }
+        
+        // File is loaded to drawPanel
+        private void setImage(BufferedImage image){
+            drawing = image;
+            drawPanel.repaint();
         }
 	
 	private void configureMenuBar(){
@@ -309,8 +323,8 @@ public class PcDesign extends JFrame{
 				JFileChooser c = new JFileChooser();
                                 
                                 // Add extension filters to JFileChooser
-                                c.addChoosableFileFilter(new jpgSaveFilter());
-                                c.addChoosableFileFilter(new pngSaveFilter());
+                                c.addChoosableFileFilter(f. new jpgSaveFilter());
+                                c.addChoosableFileFilter(f. new pngSaveFilter());
                                 
                                 c.setDialogTitle("Load drawing");
                                 int rVal = c.showOpenDialog(PcDesign.this);
@@ -322,6 +336,7 @@ public class PcDesign extends JFrame{
                                     
                                     try{
                                         img = ImageIO.read(filetoload);
+                                        setImage(img);
                                     }
                                     catch (Exception y){
                                         y.printStackTrace();
@@ -364,8 +379,8 @@ public class PcDesign extends JFrame{
                                 };
                                 
                                 // Add extension filters to JFileChooser
-                                c.addChoosableFileFilter(new jpgSaveFilter());
-                                c.addChoosableFileFilter(new pngSaveFilter());
+                                c.addChoosableFileFilter(f. new jpgSaveFilter());
+                                c.addChoosableFileFilter(f. new pngSaveFilter());
                                 
                                 c.setDialogTitle("Save drawing to current device");
                                 int rVal = c.showSaveDialog(PcDesign.this);
@@ -402,50 +417,6 @@ public class PcDesign extends JFrame{
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
 	}
-        
-        // jpg and png filter classes for JFileChooser
-
-    class jpgSaveFilter extends FileFilter
-    { 
-        public boolean accept(File f)
-        {
-            if (f.isDirectory())
-            {
-                return false;
-            }
-
-            String s = f.getName();
-
-            return s.endsWith(".jpg")||s.endsWith(".JPG");
-        }
-
-        public String getDescription() 
-        {
-            return "*.jpg,*.JPG";
-        }
-
-    }
-
-    class pngSaveFilter extends FileFilter
-    { 
-        public boolean accept(File f)
-        {
-            if (f.isDirectory())
-            {
-                return false;
-            }
-
-            String s = f.getName();
-
-            return s.endsWith(".png")||s.endsWith(".PNG");
-        }
-
-        public String getDescription() 
-        {
-            return "*.png,*.PNG";
-        }
-
-    }
 	
 	public static void main(String [] args){
 		new PcDesign();

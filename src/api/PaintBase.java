@@ -42,7 +42,8 @@ public class PaintBase {
 		
 		//g.setStroke(new BasicStroke(brush.getSize()/*, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL*/));
 		g.drawLine(x1, y1, x2, y2);
-		//g.setStroke(brush.getCustomStroke());		
+		//g.setStroke(brush.getCustomStroke());
+	
 	}
 	
 	public void drawVCenteredLine(int x1, int y1, int x2, int y2){
