@@ -10,6 +10,7 @@ public class PaintBase {
 	public static final int DEFAULT_SIZE = 4;
 	public static final Color DEFAULT_COLOR = Color.black;
 	public static final CustomStroke DEFAULT_STROKE = new CustomStroke(new Rectangle2D.Float(0, 0, DEFAULT_SIZE, DEFAULT_SIZE), DEFAULT_SIZE / 2);
+	//public static final CustomStroke DEFAULT_STROKE = new CustomStroke(new StarShape(0, 0, DEFAULT_SIZE, DEFAULT_SIZE), DEFAULT_SIZE / 2);
 	
 	protected Graphics2D g;
 	protected Brush brush;

@@ -41,6 +41,7 @@ import javax.swing.event.ChangeListener;
 
 import api.CustomStroke;
 import api.PaintBase;
+import api.StarShape;
 
 public class PcDesign extends JFrame{
 	public class BrushShapeListener implements MouseListener {
@@ -272,6 +273,10 @@ public class PcDesign extends JFrame{
 		JLabel circle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "circle.png")));
 		circle.addMouseListener(new BrushShapeListener("circle"));
 		brushShapePicker.add(circle);
+		
+		JLabel star = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "star.png")));
+		star.addMouseListener(new BrushShapeListener("star"));
+		brushShapePicker.add(star);
 	}
 	
 	private void updateBrush(int size, String type){
@@ -286,6 +291,10 @@ public class PcDesign extends JFrame{
 				paint.setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.25f));
 				break;
 			}		
+			case "star":{
+				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size), size * 0.25f));
+				break;
+			}
 		}
 	}
 	
