@@ -331,6 +331,16 @@ public class PcDesign extends JFrame{
 		file.add(saveFile);
 	}
 	
+	public void createImageFrom(BufferedImage b){
+		imgW = b.getWidth();
+		imgH = b.getHeight();
+		drawing = b;
+		if (paint != null){
+			paint.setGraphics((Graphics2D) b.getGraphics());
+		}
+		drawPanel.repaint();
+	}
+	
 	public void createNewImage(int w, int h){
 		imgW = w;
 		imgH = h;
