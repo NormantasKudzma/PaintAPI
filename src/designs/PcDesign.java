@@ -91,11 +91,10 @@ public class PcDesign extends JFrame{
 	private JPanel drawContainerPanel;
 	private JPanel drawPanel;
 	private JPanel topPanel;
-	//private PaintGUI paint;
         
-        File filetosave;
-        File filetoload;
-        Filters f = new Filters();
+    private File filetosave;
+    private File filetoload;
+    private Filters f = new Filters();
 	private PaintBase paint;
 	private BufferedImage drawing;
 	private ClassLoader cl = getClass().getClassLoader();
@@ -110,8 +109,7 @@ public class PcDesign extends JFrame{
 	private int lastY = 0;
 	
 	public PcDesign(){
-		this(frameWidth, frameHeight);
-                
+		this(frameWidth, frameHeight);              
 	}
 	
 	public PcDesign(int frameW, int frameH){
