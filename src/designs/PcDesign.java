@@ -2,6 +2,7 @@ package designs;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -47,9 +48,11 @@ import api.StarShape;
 public class PcDesign extends JFrame{
 	public class BrushShapeListener implements MouseListener {
 		private String shapeName;
+		private Container parent;
 		
-		public BrushShapeListener(String shapeName){
+		public BrushShapeListener(String shapeName, Container p){
 			this.shapeName = shapeName;
+			parent = p;
 		}
 		
 		public String getShapeName(){
@@ -68,6 +71,7 @@ public class PcDesign extends JFrame{
 		@Override
 		public void mousePressed(MouseEvent e) {
 			updateBrush(paint.getBrush().getSize(), shapeName);
+			parent.dispatchEvent(e);
 		}
 
 		@Override
@@ -279,16 +283,36 @@ public class PcDesign extends JFrame{
 		topPanel.add(brushShapePicker);
 			
 		JLabel rect = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "rect.png")));
-		rect.addMouseListener(new BrushShapeListener("rect"));
+		rect.addMouseListener(new BrushShapeListener("rect", brushShapePicker));
 		brushShapePicker.add(rect);
 		
 		JLabel circle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "circle.png")));
-		circle.addMouseListener(new BrushShapeListener("circle"));
+		circle.addMouseListener(new BrushShapeListener("circle", brushShapePicker));
 		brushShapePicker.add(circle);
 		
 		JLabel star = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "star.png")));
-		star.addMouseListener(new BrushShapeListener("star"));
+		star.addMouseListener(new BrushShapeListener("star", brushShapePicker));
 		brushShapePicker.add(star);
+
+		final JLabel shapes [] = {rect, circle, star};
+		
+		brushShapePicker.addMouseListener(new BrushShapeListener("", null){
+			@Override
+			public void mousePressed(MouseEvent e) {
+				try {
+					JLabel highlight = ((JLabel)e.getSource());
+					for (JLabel i : shapes){
+						i.setOpaque(false);
+						i.repaint();
+					}
+					highlight.setOpaque(true);
+					highlight.setBackground(Color.orange);
+				}
+				catch (Exception ex){
+					ex.printStackTrace();
+				}
+			}
+		});
 	}
 	
 	private void updateBrush(int size, String type){
