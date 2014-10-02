@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -12,9 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.awt.Component;
-import javax.imageio.ImageIO;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
@@ -24,11 +20,13 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -38,12 +36,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import javax.swing.border.LineBorder;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
-
-import java.io.File;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -116,6 +108,7 @@ public class PcDesign extends JFrame{
 		initFrame(frameW, frameH);
 		paint = new PaintBase();
 		initDrawPanel(imgW, imgH);
+		createNewImage(imgW, imgH);
 	}
 	
 	private void initFrame(int w, int h){
@@ -146,6 +139,13 @@ public class PcDesign extends JFrame{
 	}
 	
 	private void initDrawPanel(int w, int h){
+        if (drawPanel != null){
+			drawContainerPanel.remove(drawPanel);
+			drawContainerPanel.revalidate();
+			setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+		}
+		drawing = null;
+		
 		imgW = w;
 		imgH = h;
 	
@@ -183,6 +183,7 @@ public class PcDesign extends JFrame{
 			public void mouseClicked(MouseEvent e) {
 				paint.drawCenteredPixel(e.getX(), e.getY());
 				drawPanel.repaint();
+				System.out.println("Repaint called");
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
@@ -209,7 +210,6 @@ public class PcDesign extends JFrame{
 		drawContainerPanel.add(drawPanel, BorderLayout.CENTER);
 		drawContainerPanel.revalidate();
 				
-		createNewImage(imgW, imgH);
 		drawContainerPanel.repaint();
 	}
 	
@@ -251,7 +251,7 @@ public class PcDesign extends JFrame{
 		brushSizePicker.setBorder(BorderFactory.createTitledBorder("Size"));
 		topPanel.add(brushSizePicker);
 		
-		Integer [] sizes = {1, 2, 4, 8, 12, 16, 24};
+		Integer [] sizes = {1, 2, 4, 8, 12, 16, 24, 36, 48, 64, 128};
 		JComboBox<Integer> sizebox = new JComboBox<Integer>(sizes);
 		sizebox.setSelectedIndex(2);
 		sizebox.setEditable(true);
@@ -265,8 +265,7 @@ public class PcDesign extends JFrame{
 					updateBrush(size, currentShape);
 				}
 				catch (Exception ex){
-					// Input was not an integer, do nothing, supposedly
-					// ex.printStackTrace();
+					ex.printStackTrace();
 				}
 			}
 		});
@@ -310,54 +309,6 @@ public class PcDesign extends JFrame{
 			}
 		}
 	}
-        
-        // Screenshot of drawPanel is saved to BufferedImage and BufferedImage later is saved as an image file
-        private static BufferedImage getScreenShot(JPanel panel){
-            int w = panel.getWidth();
-            int h = panel.getHeight();
-            BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = bi.createGraphics();
-            panel.printAll(g);
-            return bi;
-        }
-        
-        // File is loaded to drawPanel
-        private void setImage(BufferedImage image){
-            if (drawing != null){
-			JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to load a different image?");
-			int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
-			if (result == JOptionPane.NO_OPTION){
-				return;
-			}
-			if (drawPanel != null){
-				drawContainerPanel.remove(drawPanel);
-				drawContainerPanel.revalidate();
-				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-			}
-			drawing = image;
-                        
-                        NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.getDefault());
-                        DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
-                        decimalFormat.setGroupingUsed(false);
-                        JFormattedTextField x = new JFormattedTextField(decimalFormat);
-                        x.setText("" + imgW);
-                        JFormattedTextField y = new JFormattedTextField(decimalFormat);
-                        y.setText("" + imgH);
-
-                        if (result == JOptionPane.YES_OPTION){
-                            int w = Integer.parseInt(x.getText());
-                            int h = Integer.parseInt(y.getText());
-                            if (w < 0 || h < 0){
-                                    // Invalid size, throw error?
-                                    return;
-                            }
-                            w = w > maxImgW ? maxImgW : w;
-                            h = h > maxImgH ? maxImgH : h;
-                            initDrawPanel(w, h);
-                            createImageFrom(image);
-                        }
-		}
-        }
 	
 	private void configureMenuBar(){
 		JMenu file = new JMenu("File..");
@@ -380,28 +331,34 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+				int result = throwUnsavedWarning();
+				if (result == JOptionPane.NO_OPTION){
+					return;
+				}
+				
 				JFileChooser c = new JFileChooser();
                                 
-                                // Add extension filters to JFileChooser
-                                c.addChoosableFileFilter(f. new jpgSaveFilter());
-                                c.addChoosableFileFilter(f. new pngSaveFilter());
-                                
-                                c.setDialogTitle("Load drawing");
-                                int rVal = c.showOpenDialog(PcDesign.this);
-				
-                                // Open pressed
-                                if(rVal==JFileChooser.APPROVE_OPTION) {
-                                    filetoload = c.getSelectedFile();
-                                    BufferedImage img = null;
-                                    
-                                    try{
-                                        img = ImageIO.read(filetoload);
-                                        setImage(img);
-                                    }
-                                    catch (Exception y){
-                                        y.printStackTrace();
-                                    }
-                                }
+                // Add extension filters to JFileChooser
+                c.addChoosableFileFilter(f. new jpgSaveFilter());
+                c.addChoosableFileFilter(f. new pngSaveFilter());
+                
+                c.setDialogTitle("Load drawing");
+                int rVal = c.showOpenDialog(PcDesign.this);
+
+                // Open pressed
+                if(rVal==JFileChooser.APPROVE_OPTION) {
+                    filetoload = c.getSelectedFile();
+                    BufferedImage img = null;
+                    
+                    try{
+                        img = ImageIO.read(filetoload);
+                        initDrawPanel(img.getWidth(), img.getHeight());
+                        createImageFrom(img);
+                    }
+                    catch (Exception y){
+                        y.printStackTrace();
+                    }
+                }
 			}
 		});
 		KeyStroke ctrlO = KeyStroke.getKeyStroke("control O");
@@ -461,11 +418,10 @@ public class PcDesign extends JFrame{
                                         ext="png";
                                     }
                                     
-                                    BufferedImage img = getScreenShot(drawPanel);
                                     filetosave = c.getSelectedFile();
                                     
                                     try{
-                                        ImageIO.write(img, ext, filetosave);
+                                        ImageIO.write(drawing, ext, filetosave);
                                     }
                                     catch (Exception y){
                                         y.printStackTrace();
@@ -500,17 +456,11 @@ public class PcDesign extends JFrame{
 	
 	public void promptCreateNewImage(){
 		if (drawing != null){
-			JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to create a new image?");
-			int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
+			int result = throwUnsavedWarning();
 			if (result == JOptionPane.NO_OPTION){
 				return;
 			}
-			if (drawPanel != null){
-				drawContainerPanel.remove(drawPanel);
-				drawContainerPanel.revalidate();
-				setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-			}
-			drawing = null;
+			
 		}
 		NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.getDefault());
 		DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
@@ -539,7 +489,14 @@ public class PcDesign extends JFrame{
 			w = w > maxImgW ? maxImgW : w;
 			h = h > maxImgH ? maxImgH : h;
 			initDrawPanel(w, h);
+			createNewImage(imgW, imgH);
 		}				
+	}
+	
+	public int throwUnsavedWarning(){
+		JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to continue?");
+		int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
+		return result;
 	}
 	
 	public static void main(String [] args){

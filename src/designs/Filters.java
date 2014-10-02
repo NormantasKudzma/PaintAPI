@@ -6,8 +6,7 @@ import javax.swing.filechooser.FileFilter;
 public class Filters {
     
     // jpg and png filter classes for JFileChooser
-    class jpgSaveFilter extends FileFilter
-    { 
+    public class jpgSaveFilter extends FileFilter { 
         public boolean accept(File f)
         {
             if (f.isDirectory())
@@ -27,8 +26,7 @@ public class Filters {
 
     }
 
-    class pngSaveFilter extends FileFilter
-    { 
+    class pngSaveFilter extends FileFilter { 
         public boolean accept(File f)
         {
             if (f.isDirectory())
