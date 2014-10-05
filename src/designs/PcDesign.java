@@ -44,6 +44,7 @@ import javax.swing.event.ChangeListener;
 import api.CustomStroke;
 import api.PaintBase;
 import api.StarShape;
+import api.TriangleShape;
 
 public class PcDesign extends JFrame{
 	public class BrushShapeListener implements MouseListener {
@@ -187,7 +188,6 @@ public class PcDesign extends JFrame{
 			public void mouseClicked(MouseEvent e) {
 				paint.drawCenteredPixel(e.getX(), e.getY());
 				drawPanel.repaint();
-				System.out.println("Repaint called");
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
@@ -284,6 +284,8 @@ public class PcDesign extends JFrame{
 			
 		JLabel rect = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "rect.png")));
 		rect.addMouseListener(new BrushShapeListener("rect", brushShapePicker));
+		rect.setOpaque(true);
+		rect.setBackground(Color.orange);
 		brushShapePicker.add(rect);
 		
 		JLabel circle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "circle.png")));
@@ -294,7 +296,11 @@ public class PcDesign extends JFrame{
 		star.addMouseListener(new BrushShapeListener("star", brushShapePicker));
 		brushShapePicker.add(star);
 
-		final JLabel shapes [] = {rect, circle, star};
+		JLabel triangle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "triangle.png")));
+		triangle.addMouseListener(new BrushShapeListener("triangle", brushShapePicker));
+		brushShapePicker.add(triangle);
+		
+		final JLabel shapes [] = {rect, circle, star, triangle};
 		
 		brushShapePicker.addMouseListener(new BrushShapeListener("", null){
 			@Override
@@ -329,6 +335,10 @@ public class PcDesign extends JFrame{
 			}		
 			case "star":{
 				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size), size * 0.25f));
+				break;
+			}
+			case "triangle":{
+				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size), size * 0.25f));
 				break;
 			}
 		}
@@ -456,6 +466,20 @@ public class PcDesign extends JFrame{
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
+		
+		JMenu edit = new JMenu("Edit..");
+		menuBar.add(edit);
+		
+		JMenuItem moreclrs = new JMenuItem("Buy more colors, now 70% off!");
+		moreclrs.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Color c = JColorChooser.showDialog(PcDesign.this, "Select a custom color", paint.getBrushColor());
+				paint.setBrushColor(c);
+			}			
+		});
+		edit.add(moreclrs);
 	}
 	
 	public void createImageFrom(BufferedImage b){
