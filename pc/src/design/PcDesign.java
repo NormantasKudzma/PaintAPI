@@ -1,4 +1,4 @@
-package designs;
+package design;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -41,10 +41,12 @@ import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import api.CustomStroke;
-import api.PaintBase;
-import api.StarShape;
-import api.TriangleShape;
+import core.CustomStroke;
+import core.Filters;
+import core.PaintBase;
+import core.StarShape;
+import core.TriangleShape;
+
 
 public class PcDesign extends JFrame{
 	public class BrushShapeListener implements MouseListener {

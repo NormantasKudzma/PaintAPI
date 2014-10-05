@@ -1,4 +1,4 @@
-package designs;
+package core;
 
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
@@ -26,7 +26,7 @@ public class Filters {
 
     }
 
-    class pngSaveFilter extends FileFilter { 
+    public class pngSaveFilter extends FileFilter { 
         public boolean accept(File f)
         {
             if (f.isDirectory())

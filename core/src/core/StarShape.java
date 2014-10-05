@@ -1,4 +1,4 @@
-package api;
+package core;
 
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -8,8 +8,8 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.NoSuchElementException;
 
-public class TriangleShape implements Shape{
-	public class TriangleShapeIterator implements PathIterator{
+public class StarShape implements Shape{
+	public class StarShapeIterator implements PathIterator{
 		AffineTransform at;
 		int index;
 		int x;
@@ -17,25 +17,33 @@ public class TriangleShape implements Shape{
 		int w;
 		int h;
 		
-		public TriangleShapeIterator(TriangleShape ss, AffineTransform at){
+		public StarShapeIterator(StarShape ss, AffineTransform at){
 			this.at = at;
 			this.x = ss.x;
 			this.y = ss.y;
 			this.w = ss.width;
 			this.h = ss.height;
 			if (ss.width < 0 || ss.height < 0){
-				index = 3;
+				index = 10;
 			}
 		}
 		
 		public final float [] ctrl = 
-			{0f, 1f, 0.5f, 0f, 1f, 1f};
+			{0.175f, 0.975f,   0.3f,   0.6f,
+			 0f,     0.4f,     0.375f, 0.425f,
+			 0.5f,   0f,       0.625f, 0.425f,
+			 1.00f,  0.4f,     0.7f,   0.6f,
+			 0.825f, 0.975f,   0.5f,   0.75f
+			};
 		
 		@Override
 		public int currentSegment(float[] points) {
 			if (isDone()){
 				throw new NoSuchElementException("StarShapeIterator is out of bounds");
 			}
+//			if (index == 9){
+//				return SEG_CLOSE;
+//			}
 			if (index == 0){
 				points[0] = (float)(x + ctrl[0] * w);
 				points[1] = (float)(y + ctrl[1] * h);
@@ -48,6 +56,7 @@ public class TriangleShape implements Shape{
 			points[1] = (float)(y + ctrl[1 + 2 * index] * h);
 			if (at != null){
 				at.transform(points, 0, points, 0, 1);
+				//at.translate(points[0], points[1]);
 			}
 			return SEG_LINETO;
 		}
@@ -56,6 +65,9 @@ public class TriangleShape implements Shape{
 		public int currentSegment(double[] points) {
 			if (isDone()){
 				throw new NoSuchElementException("StarShapeIterator is out of bounds");
+			}
+			if (index == 9){
+				return SEG_CLOSE;
 			}
 			if (index == 0){
 				points[0] = (double)(x + ctrl[0] * w);
@@ -68,6 +80,7 @@ public class TriangleShape implements Shape{
 			points[0] = (double)(x + ctrl[2 * index] * w);
 			points[1] = (double)(y + ctrl[1 + 2 * index] * h);
 			if (at != null){
+				//at.translate(points[0], points[1]);
 				at.transform(points, 0, points, 0, 1);
 			}
 			return SEG_LINETO;
@@ -80,7 +93,7 @@ public class TriangleShape implements Shape{
 
 		@Override
 		public boolean isDone() {
-			return index > 2;
+			return index > 9;
 		}
 
 		@Override
@@ -95,11 +108,16 @@ public class TriangleShape implements Shape{
 	private int height;
 	
 	public final float [] c = 
-		{0f, 1f, 0.5f, 0f, 1f, 1f};
+		{0.175f, 0.975f,   0.3f,   0.6f,
+		 0f,     0.4f,     0.375f, 0.425f,
+		 0.5f,   0f,       0.625f, 0.425f,
+		 1.00f,  0.4f,     0.7f,   0.6f,
+		 0.825f, 0.975f,   0.5f,   0.75f
+		};
 	
-	public TriangleShape(){}
+	public StarShape(){}
 	
-	public TriangleShape(int x, int y, int w, int h){
+	public StarShape(int x, int y, int w, int h){
 		this.x = x;
 		this.y = y;
 		this.width = w;
@@ -110,7 +128,8 @@ public class TriangleShape implements Shape{
 	  return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3);
 	}
 
-	public boolean isPointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3){
+	public boolean isPointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3)
+	{
 	  boolean b1, b2, b3;
 
 	  b1 = sign(px, py, x1, y1, x2, y2) < 0.0f;
@@ -135,7 +154,12 @@ public class TriangleShape implements Shape{
 	public boolean contains(double x, double y) {
 		float fx = (float)x;
 		float fy = (float)y;
-		return isPointInTriangle(fx, fy, c[0], c[1], c[2], c[3], c[4], c[5]);
+		return (isPointInTriangle(fx, fy, c[2], c[3], c[8], c[9], c[14], c[15]) ||
+				isPointInTriangle(fx, fy, c[2], c[3], c[14], c[15], c[16], c[17]) ||
+				isPointInTriangle(fx, fy, c[0], c[1], c[2], c[3], c[18], c[19]) ||
+				isPointInTriangle(fx, fy, c[2], c[3], c[4], c[5], c[6], c[7]) ||
+				isPointInTriangle(fx, fy, c[10], c[11], c[12], c[13], c[14], c[15])
+			   );
 	}
 
 	@Override
@@ -158,12 +182,12 @@ public class TriangleShape implements Shape{
 
 	@Override
 	public PathIterator getPathIterator(AffineTransform at) {
-		return new TriangleShape.TriangleShapeIterator(this, at);
+		return new StarShape.StarShapeIterator(this, at);
 	}
 
 	@Override
 	public PathIterator getPathIterator(AffineTransform at, double flatness) {
-		return new TriangleShape.TriangleShapeIterator(this, at);
+		return new StarShape.StarShapeIterator(this, at);
 	}
 
 	@Override

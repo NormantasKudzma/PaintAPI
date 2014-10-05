@@ -1,4 +1,4 @@
-package api;
+package core;
 
 import java.awt.Color;
 import java.awt.Shape;
