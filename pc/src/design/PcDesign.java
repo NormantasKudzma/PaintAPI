@@ -1,7 +1,8 @@
-package designs;
+package design;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -40,16 +41,21 @@ import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import api.CustomStroke;
-import api.PaintBase;
-import api.StarShape;
+import core.CustomStroke;
+import core.Filters;
+import core.PaintBase;
+import core.StarShape;
+import core.TriangleShape;
+
 
 public class PcDesign extends JFrame{
 	public class BrushShapeListener implements MouseListener {
 		private String shapeName;
+		private Container parent;
 		
-		public BrushShapeListener(String shapeName){
+		public BrushShapeListener(String shapeName, Container p){
 			this.shapeName = shapeName;
+			parent = p;
 		}
 		
 		public String getShapeName(){
@@ -68,6 +74,7 @@ public class PcDesign extends JFrame{
 		@Override
 		public void mousePressed(MouseEvent e) {
 			updateBrush(paint.getBrush().getSize(), shapeName);
+			parent.dispatchEvent(e);
 		}
 
 		@Override
@@ -183,7 +190,6 @@ public class PcDesign extends JFrame{
 			public void mouseClicked(MouseEvent e) {
 				paint.drawCenteredPixel(e.getX(), e.getY());
 				drawPanel.repaint();
-				System.out.println("Repaint called");
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
@@ -279,16 +285,42 @@ public class PcDesign extends JFrame{
 		topPanel.add(brushShapePicker);
 			
 		JLabel rect = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "rect.png")));
-		rect.addMouseListener(new BrushShapeListener("rect"));
+		rect.addMouseListener(new BrushShapeListener("rect", brushShapePicker));
+		rect.setOpaque(true);
+		rect.setBackground(Color.orange);
 		brushShapePicker.add(rect);
 		
 		JLabel circle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "circle.png")));
-		circle.addMouseListener(new BrushShapeListener("circle"));
+		circle.addMouseListener(new BrushShapeListener("circle", brushShapePicker));
 		brushShapePicker.add(circle);
 		
 		JLabel star = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "star.png")));
-		star.addMouseListener(new BrushShapeListener("star"));
+		star.addMouseListener(new BrushShapeListener("star", brushShapePicker));
 		brushShapePicker.add(star);
+
+		JLabel triangle = new JLabel(new ImageIcon(cl.getResource(RES_PATH + "triangle.png")));
+		triangle.addMouseListener(new BrushShapeListener("triangle", brushShapePicker));
+		brushShapePicker.add(triangle);
+		
+		final JLabel shapes [] = {rect, circle, star, triangle};
+		
+		brushShapePicker.addMouseListener(new BrushShapeListener("", null){
+			@Override
+			public void mousePressed(MouseEvent e) {
+				try {
+					JLabel highlight = ((JLabel)e.getSource());
+					for (JLabel i : shapes){
+						i.setOpaque(false);
+						i.repaint();
+					}
+					highlight.setOpaque(true);
+					highlight.setBackground(Color.orange);
+				}
+				catch (Exception ex){
+					ex.printStackTrace();
+				}
+			}
+		});
 	}
 	
 	private void updateBrush(int size, String type){
@@ -305,6 +337,10 @@ public class PcDesign extends JFrame{
 			}		
 			case "star":{
 				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size), size * 0.25f));
+				break;
+			}
+			case "triangle":{
+				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size), size * 0.25f));
 				break;
 			}
 		}
@@ -432,6 +468,20 @@ public class PcDesign extends JFrame{
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
+		
+		JMenu edit = new JMenu("Edit..");
+		menuBar.add(edit);
+		
+		JMenuItem moreclrs = new JMenuItem("Buy more colors, now 70% off!");
+		moreclrs.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Color c = JColorChooser.showDialog(PcDesign.this, "Select a custom color", paint.getBrushColor());
+				paint.setBrushColor(c);
+			}			
+		});
+		edit.add(moreclrs);
 	}
 	
 	public void createImageFrom(BufferedImage b){

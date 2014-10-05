@@ -1,4 +1,4 @@
-package api;
+package core;
 
 import java.awt.Rectangle;
 import java.awt.Shape;
