@@ -64,6 +64,36 @@ public class PcDesign extends JFrame{
 		public void mouseReleased(MouseEvent e) {}	
 	}
 	
+	public class BucketListener implements MouseListener {
+		
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int x = e.getX();
+				int y = e.getY();
+				
+			}
+				
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+
+			@Override
+			public void mouseExited(MouseEvent e) {}
+
+			@Override
+			public void mousePressed(MouseEvent e) {				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {}	
+	
+	}
+	
 	private static int frameWidth = 1280;
 	private static int frameHeight = 720;
 	private static final String RES_PATH = "res/";
@@ -308,8 +338,20 @@ public class PcDesign extends JFrame{
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
+		
+		JMenu tools = new JMenu("Tools");
+		menuBar.add(tools);
+		JMenuItem bucket = new JMenuItem("Bucket");
+		tools.add(bucket);
+		
+		bucket.addMouseListener(new BucketListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				
+			}	
+	});
 	}
-	
 	public static void main(String [] args){
 		new PcDesign();
 	}
