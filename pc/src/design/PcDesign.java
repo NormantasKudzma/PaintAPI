@@ -1,5 +1,4 @@
 package design;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -81,31 +80,31 @@ public class PcDesign extends JFrame{
 		public void mouseReleased(MouseEvent e) {}	
 	}
 	
-	private static int frameWidth = 1280;
-	private static int frameHeight = 720;
-	private static final String RES_PATH = "res/";
-	private static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
+	protected static int frameWidth = 1280;
+	protected static int frameHeight = 720;
+	protected static final String RES_PATH = "res/";
+	protected static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
 	
-	private JMenuBar menuBar;
-	private JPanel drawContainerPanel;
-	private JPanel drawPanel;
-	private JPanel topPanel;
+	protected JMenuBar menuBar;
+	protected JPanel drawContainerPanel;
+	protected JPanel drawPanel;
+	protected JPanel topPanel;
         
-    private File filetosave;
-    private File filetoload;
-    private Filters f = new Filters();
-	private PaintBase paint;
-	private BufferedImage drawing;
-	private ClassLoader cl = getClass().getClassLoader();
-	private String currentShape = "rect";
+    protected File filetosave;
+    protected File filetoload;
+    protected Filters f = new Filters();
+	protected PaintBase paint;
+	protected BufferedImage drawing;
+	protected ClassLoader cl = getClass().getClassLoader();
+	protected String currentShape = "rect";
 	
-	private int maxImgW = 0;
-	private int maxImgH = 0;
-	private int imgW = 0;
-	private int imgH = 0;
+	protected int maxImgW = 0;
+	protected int maxImgH = 0;
+	protected int imgW = 0;
+	protected int imgH = 0;
 	
-	private int lastX = 0;
-	private int lastY = 0;
+	protected int lastX = 0;
+	protected int lastY = 0;
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);              
@@ -118,7 +117,7 @@ public class PcDesign extends JFrame{
 		createNewImage(imgW, imgH);
 	}
 	
-	private void initFrame(int w, int h){
+	protected void initFrame(int w, int h){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(w, h);
 		setTitle("The amazing paint program for PC v0.1");
@@ -128,7 +127,7 @@ public class PcDesign extends JFrame{
 		setVisible(true);
 	}
 	
-	private void initLayout(){
+	protected void initLayout(){
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -145,7 +144,7 @@ public class PcDesign extends JFrame{
 		configureMenuBar();
 	}
 	
-	private void initDrawPanel(int w, int h){
+	protected void initDrawPanel(int w, int h){
         if (drawPanel != null){
 			drawContainerPanel.remove(drawPanel);
 			drawContainerPanel.revalidate();
@@ -219,7 +218,7 @@ public class PcDesign extends JFrame{
 		drawContainerPanel.repaint();
 	}
 	
-	private void initTopPanel(){
+	protected void initTopPanel(){
 		topPanel = new JPanel();
 		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
 		topPanel.setMaximumSize(new Dimension(frameWidth, (int)(0.2 * frameHeight)));
@@ -344,19 +343,19 @@ public class PcDesign extends JFrame{
 		});
 	}
 	
-	private void updateBrush(int size){
+	protected void updateBrush(int size){
 		updateBrush(size, paint.getBrushRotation(), currentShape);
 	}
 	
-	private void updateBrush(String type){
+	protected void updateBrush(String type){
 		updateBrush(paint.getBrushSize(), paint.getBrushRotation(), type);
 	}
 	
-	private void updateBrush(double rotation){
+	protected void updateBrush(double rotation){
 		updateBrush(paint.getBrushSize(), rotation, currentShape);
 	}
 	
-	private void updateBrush(int size, double rotation, String type){
+	protected void updateBrush(int size, double rotation, String type){
 		paint.setBrushSize(size);
 		paint.setBrushRotation(rotation);
 		currentShape = type;
@@ -380,7 +379,7 @@ public class PcDesign extends JFrame{
 		}
 	}
 	
-	private void configureMenuBar(){
+	protected void configureMenuBar(){
 		JMenu file = new JMenu("File..");
 		menuBar.add(file);
 		
