@@ -1,34 +1,29 @@
 package design;
 
-import edu.ufl.digitalworlds.j4k.J4KSDK;
-import edu.ufl.digitalworlds.j4k.VideoFrame;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
-public class KinectDesign extends J4KSDK{
-	VideoFrame videoTexture; 
-	
-	
+import edu.ufl.digitalworlds.gui.DWApp;
+
+public class KinectDesign{
+	Kinect k;
+	VideoPanel videoPanel;
+
 	public KinectDesign(){
-		super();
-		new PcDesign();
-		videoTexture = new VideoFrame();
+
+		k = new Kinect();		
+		
+		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_320x240, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
+			System.out.println("Error starting kinect.");
+		}
+		k.computeUV(true);
+		k.startSkeletonTracking(true);
+		videoPanel = k.videoPanel = new VideoPanel();
+		
 	}
 	
 	
-	@Override
-	public void onDepthFrameEvent(short[] packed_depth, int[] U, int V[]) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onSkeletonFrameEvent(float[] data, boolean[] flags) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onVideoFrameEvent(byte[] data) {
-		// TODO Auto-generated method stub
-		
+	public static void main(String[] args){
+		new KinectDesign();
 	}
 }
