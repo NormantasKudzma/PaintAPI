@@ -14,7 +14,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.DecimalFormat;
@@ -44,6 +43,7 @@ import javax.swing.event.ChangeListener;
 import core.CustomStroke;
 import core.Filters;
 import core.PaintBase;
+import core.RectShape;
 import core.StarShape;
 import core.TriangleShape;
 
@@ -73,7 +73,7 @@ public class PcDesign extends JFrame{
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			updateBrush(paint.getBrush().getSize(), shapeName);
+			updateBrush(shapeName);
 			parent.dispatchEvent(e);
 		}
 
@@ -255,6 +255,7 @@ public class PcDesign extends JFrame{
 		JPanel brushSizePicker = new JPanel();
 		brushSizePicker.setMaximumSize(new Dimension((int)(w * 0.25), maxHeight));
 		brushSizePicker.setBorder(BorderFactory.createTitledBorder("Size"));
+		brushSizePicker.setLayout(new GridLayout(0, 1));
 		topPanel.add(brushSizePicker);
 		
 		Integer [] sizes = {1, 2, 4, 8, 12, 16, 24, 36, 48, 64, 128};
@@ -268,7 +269,7 @@ public class PcDesign extends JFrame{
 				try {
 					JComboBox<Integer> c = (JComboBox) e.getSource();
 					int size = (Integer)c.getSelectedItem();
-					updateBrush(size, currentShape);
+					updateBrush(size);
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -276,6 +277,26 @@ public class PcDesign extends JFrame{
 			}
 		});
 		brushSizePicker.add(sizebox);
+		
+		Double [] rotations = {0d, 30d, 60d, 90d, 120d, 150d, 180d, 210d, 240d, 270d, 300d, 330d};
+		JComboBox<Double> rbox = new JComboBox<Double>(rotations);
+		rbox.setSelectedIndex(0);
+		rbox.setEditable(true);
+		rbox.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					JComboBox<Integer> c = (JComboBox) e.getSource();
+					double r = (Double)c.getSelectedItem();
+					updateBrush(r);
+				}
+				catch (Exception ex){
+					ex.printStackTrace();
+				}
+			}		
+		});
+		brushSizePicker.add(rbox);
 		
 		// Brush shape picker
 		JPanel brushShapePicker = new JPanel();
@@ -323,12 +344,25 @@ public class PcDesign extends JFrame{
 		});
 	}
 	
-	private void updateBrush(int size, String type){
+	private void updateBrush(int size){
+		updateBrush(size, paint.getBrushRotation(), currentShape);
+	}
+	
+	private void updateBrush(String type){
+		updateBrush(paint.getBrushSize(), paint.getBrushRotation(), type);
+	}
+	
+	private void updateBrush(double rotation){
+		updateBrush(paint.getBrushSize(), rotation, currentShape);
+	}
+	
+	private void updateBrush(int size, double rotation, String type){
 		paint.setBrushSize(size);
+		paint.setBrushRotation(rotation);
 		currentShape = type;
 		switch(type){
 			case "rect":{
-				paint.setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new RectShape(0, 0, size, size, rotation), size * 0.25f));
 				break;
 			}
 			case "circle":{
@@ -336,11 +370,11 @@ public class PcDesign extends JFrame{
 				break;
 			}		
 			case "star":{
-				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size, rotation), size * 0.25f));
 				break;
 			}
 			case "triangle":{
-				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size, rotation), size * 0.25f));
 				break;
 			}
 		}
