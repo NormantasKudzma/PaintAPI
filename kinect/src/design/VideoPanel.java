@@ -36,7 +36,7 @@ public class VideoPanel extends OpenGLPanel {
 		gl.glColor3f(0.9f,0.9f,0.9f);
 		
 		skeletons = new Skeleton[Kinect.NUI_SKELETON_COUNT];
-		videoTexture=new VideoFrame();		
+		videoTexture = new VideoFrame();		
 	    background(0, 0, 0);
 	}
 	
@@ -63,7 +63,7 @@ public class VideoPanel extends OpenGLPanel {
 	    
 	    for(int i = 0; i < Kinect.NUI_SKELETON_COUNT;i++){
 	    	if(skeletons[i] != null){
-	    		if(skeletons[i].getTimesDrawn()<=10 && skeletons[i].isTracked()){
+	    		if(skeletons[i].getTimesDrawn() <= 10 && skeletons[i].isTracked()){
 	    			skeletons[i].draw(gl);
 	    			skeletons[i].increaseTimesDrawn();
 	    		}

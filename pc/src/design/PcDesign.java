@@ -108,7 +108,7 @@ public class PcDesign extends JFrame{
 	protected int lastY = 0;
 	
 	public PcDesign(){
-		this(frameWidth, frameHeight);              
+		this(frameWidth, frameHeight);
 	}
 	
 	public PcDesign(int frameW, int frameH){
@@ -174,6 +174,7 @@ public class PcDesign extends JFrame{
 			public void mousePressed(MouseEvent e) {			
 				lastX = e.getX();
 				lastY = e.getY();
+				mouseClicked(e);
 			}
 			
 			@Override
