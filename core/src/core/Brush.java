@@ -1,4 +1,4 @@
-package api;
+package core;
 
 import java.awt.Color;
 import java.awt.Shape;
@@ -6,16 +6,26 @@ import java.awt.geom.Rectangle2D;
 
 public class Brush {
 	private int size;
+	private double rotation;
 	private Color color;
 	private CustomStroke stroke;
 	
 	// Only for internal use in PaintBase class
 	public Brush(){}
 	
-	public Brush(int size, Color color, CustomStroke cc){
+	public Brush(int size, double rotation, Color color, CustomStroke cc){
 		setSize(size);
-		setColor(color);
+		setRotation(rotation);
+		setColor(color);	
 		setCustomStroke(cc);
+	}
+	
+	public void setRotation(double r){
+		rotation = r;
+	}
+	
+	public double getRotation(){
+		return rotation;
 	}
 	
 	public void setSize(int size){

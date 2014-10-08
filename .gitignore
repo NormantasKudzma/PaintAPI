@@ -13,4 +13,8 @@ hs_err_pid*
 
 *.project*
 *.classpath*
+manifest.*
+build.*
 bin/
+build/
+nbproject/

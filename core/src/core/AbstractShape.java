@@ -1,4 +1,4 @@
-package api;
+package core;
 
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -7,56 +7,44 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public class StarShape implements Shape{
-	public class StarShapeIterator implements PathIterator{
-		@Override
-		public int currentSegment(float[] arg0) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		@Override
-		public int currentSegment(double[] arg0) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		@Override
-		public int getWindingRule() {
-			return PathIterator.WIND_NON_ZERO;
-		}
-
-		@Override
-		public boolean isDone() {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public void next() {
-			// TODO Auto-generated method stub
-			
-		}
-	}
+public class AbstractShape implements Shape{
+	public int x;
+	public int y;
+	public int width;
+	public int height;
+	public int sz;
+	public double rotation;
 	
-	private int x;
-	private int y;
-	private int width;
-	private int height;
+	public float [] c;
 	
-	public StarShape(){}
+	public AbstractShape(){}
 	
-	public StarShape(int x, int y, int w, int h){
+	public AbstractShape(int x, int y, int w, int h, float [] ctrl, double rotation){
 		this.x = x;
 		this.y = y;
 		this.width = w;
 		this.height = h;
+		this.c = ctrl;
+		this.rotation = rotation;
+	}
+	
+	float sign(float x1, float y1, float x2, float y2, float x3, float y3){
+	  return (x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3);
+	}
+
+	public boolean isPointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3){
+	  boolean b1, b2, b3;
+
+	  b1 = sign(px, py, x1, y1, x2, y2) < 0.0f;
+	  b2 = sign(px, py, x2, y2, x3, y3) < 0.0f;
+	  b3 = sign(px, py, x3, y3, x1, y1) < 0.0f;
+
+	  return ((b1 == b2) && (b2 == b3));
 	}
 	
 	@Override
 	public boolean contains(Point2D p) {
-		// TODO Auto-generated method stub
-		return false;
+		return contains(p.getX(), p.getY());
 	}
 
 	@Override
@@ -67,7 +55,6 @@ public class StarShape implements Shape{
 
 	@Override
 	public boolean contains(double x, double y) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -91,14 +78,12 @@ public class StarShape implements Shape{
 
 	@Override
 	public PathIterator getPathIterator(AffineTransform at) {
-		// TODO Auto-generated method stub
-		return null;
+		return new AbstractShapeIterator(this, at, c.length / 2, c, rotation);
 	}
 
 	@Override
 	public PathIterator getPathIterator(AffineTransform at, double flatness) {
-		// TODO Auto-generated method stub
-		return null;
+		return new AbstractShapeIterator(this, at, c.length / 2, c, rotation);
 	}
 
 	@Override
