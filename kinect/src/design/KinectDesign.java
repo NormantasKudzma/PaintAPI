@@ -3,14 +3,19 @@ package design;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import com.jogamp.newt.event.InputEvent;
+import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
 
 
 public class KinectDesign extends PcDesign {
@@ -23,29 +28,34 @@ public class KinectDesign extends PcDesign {
 	BufferedImage cursorActive;
 	public int thisX, thisY;
 
-	public KinectDesign(){		
+	public KinectDesign(){	
+		setVisible(false);
+		videoPanel = new VideoPanel();
+		cl = getClass().getClassLoader();
+		
+		thisX = frameWidth / 2;
+		thisY = (int) (frameHeight *0.75);
+		
+		
+		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");
+		
+		setUpGlassPane();
+		setUpTopPanel();
 		// KINECT INITIALIZATION
 		k = new Kinect();				
 		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_320x240, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
 			System.out.println("Error starting kinect.");
 		}
 		k.computeUV(true);
-		k.startSkeletonTracking(false);
+		k.startSkeletonTracking(false); // buvo false jei crashins
 		k.setNearMode(true);
-		videoPanel = k.videoPanel = new VideoPanel();
+		k.videoPanel = videoPanel;
 		k.k = this;
-		// KINECT INITIALIZATION
-		
-		thisX = frameWidth / 2;
-		thisY = (int) (frameHeight *0.75);
-		
-		cl = getClass().getClassLoader();
-		
-		setGlassPane();
-		setUpVideoPanel();
+		// KINECT INITIALIZATION	
+		setVisible(true);
 	}
 	
-	protected void setGlassPane(){
+	protected void setUpGlassPane(){
 		try {
 			cursor = ImageIO.read(cl.getResource(RES_PATH + "cursor.png"));
 			cursorActive = ImageIO.read(cl.getResource(RES_PATH + "cursorActive.png")); 
@@ -66,41 +76,90 @@ public class KinectDesign extends PcDesign {
 		glass.repaint();
 	}
 	
-	protected void setUpVideoPanel(){
+	protected void setUpTopPanel(){
 		int newWidth = PcDesign.frameWidth;
 		// Resize old components, so there's place for video frame
-		Component [] c = topPanel.getComponents();
-		for (Component i : c){
-			i = (JPanel)i;
-			Dimension d = i.getMaximumSize();
+		Component [] c = topPanel.getComponents();		
+		
+		for (int i = 0; i < c.length; i++){
+			JPanel p = (JPanel)c[i];
+			Dimension d = p.getMaximumSize();
 			newWidth -= d.width * 0.85f;
-			i.setMaximumSize(new Dimension((int) (d.width * 0.85f), d.height));
+			p.setMaximumSize(new Dimension((int) (d.width * 0.85f), d.height));
 		}		
 		
-		videoPanel.setMaximumSize(new Dimension(newWidth, topPanel.getHeight()));
+		// Changing JColorChooser's color palette to our huge color buttons
+		Dimension d = c[0].getMaximumSize();
+		d.width *= 0.85f;
+		d.height *= 0.80f;
+		KinectColorChooser [] kcc = {new KinectColorChooser(d)};	
+		JColorChooser jcc = (JColorChooser)((JPanel)c[0]).getComponent(0);
+		jcc.setChooserPanels(kcc);
 		
+		// Changing the old size chooser (new is buttons, easier to use)
+		JPanel opts = ((JPanel)c[1]);
+		opts.remove(0);
+		JPanel size = new JPanel();
+		opts.add(size, 0);
+		size.setLayout(new GridLayout(1, 3));
+		final JLabel sizeLabel = new JLabel("8", SwingConstants.CENTER);
+		sizeLabel.setBorder(new LineBorder(Color.black));
+		sizeLabel.setFont(new Font("Serif", Font.BOLD, 35));
+		JButton minus = new JButton("-");
+		minus.setFont(new Font("Serif", Font.BOLD, 35));
+		minus.addMouseListener(new core.LightweightMouseListener(){
+			@Override
+			public void mousePressed(MouseEvent e) {
+				int size = Integer.parseInt(sizeLabel.getText());
+				if (size > 4){
+					size /= 2;
+					sizeLabel.setText("" + size);
+					updateBrush(size);
+				}
+			}
+		});
+		JButton plus = new JButton("+");
+		plus.setFont(new Font("Serif", Font.BOLD, 35));
+		plus.addMouseListener(new core.LightweightMouseListener(){
+			@Override
+			public void mousePressed(MouseEvent e) {
+				int size = Integer.parseInt(sizeLabel.getText());
+				if (size < 256){
+					size *= 2;
+					sizeLabel.setText("" + size);
+					updateBrush(size);
+				}
+			}
+		});
+		updateBrush(8);				
+		size.add(minus);
+		size.add(sizeLabel);
+		size.add(plus);
+		opts.revalidate();
+		opts.repaint();
+		
+		videoPanel.setMaximumSize(new Dimension(newWidth, topPanel.getHeight()));		
 		topPanel.add(videoPanel);
 		topPanel.revalidate();
 		topPanel.repaint();
 	}
 	
 	protected void dispatchMouseClick(){
-		MouseEvent e = new MouseEvent(this, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
 		this.dispatchEvent(e);
 		if (fakeMouse != cursorActive){
 			fakeMouse = cursorActive;
 		}
-		//System.out.println("Dispatch Mouse Click called");
 	}
 	
 	protected void dispatchMouseDrag(){
-		// FIX MOUSE DRAG
-		MouseEvent e = new MouseEvent(this, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY, 0, false);
-		this.dispatchEvent(e);
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY, 1, false);
+		if (drawContainerPanel.contains(thisX, thisY)){
+			drawPanel.dispatchEvent(e);
+		}
 		if (fakeMouse != cursorActive){
 			fakeMouse = cursorActive;
 		}
-		//System.out.println("Dispatch Mouse drag called");
 	}
 	
 	protected void dispatchMouseRelease(){
