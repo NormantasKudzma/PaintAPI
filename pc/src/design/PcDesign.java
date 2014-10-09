@@ -204,7 +204,7 @@ public class PcDesign extends JFrame{
 				float treshold = paint.getBrushSize() * 0.15f;
 				if (dist > treshold){
 					paint.drawCenteredLine(lastX, lastY, x, y);
-
+					System.out.printf("%d\t%d\t%d\t%d\n", lastX, lastY, x, y);
 				}
 				else {
 					paint.drawCenteredPixel(lastX, lastY);

@@ -18,7 +18,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 
 
-public class KinectDesign extends PcDesign {
+public class KinectDesign extends PcDesign {	
 	Kinect k;
 	VideoPanel videoPanel;
 	BufferedImage fakeMouse;
@@ -27,6 +27,7 @@ public class KinectDesign extends PcDesign {
 	BufferedImage cursor;
 	BufferedImage cursorActive;
 	public int thisX, thisY;
+	int topSize;
 
 	public KinectDesign(){	
 		setVisible(false);
@@ -80,6 +81,7 @@ public class KinectDesign extends PcDesign {
 		int newWidth = PcDesign.frameWidth;
 		// Resize old components, so there's place for video frame
 		Component [] c = topPanel.getComponents();		
+		topSize = topPanel.getHeight();
 		
 		for (int i = 0; i < c.length; i++){
 			JPanel p = (JPanel)c[i];
@@ -145,16 +147,23 @@ public class KinectDesign extends PcDesign {
 	}
 	
 	protected void dispatchMouseClick(){
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
-		this.dispatchEvent(e);
+		MouseEvent e;
+		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
+			e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY - topSize, 1, false);
+			drawPanel.dispatchEvent(e);
+		}
+		else {
+			e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
+			this.dispatchEvent(e);
+		}
 		if (fakeMouse != cursorActive){
 			fakeMouse = cursorActive;
 		}
 	}
 	
-	protected void dispatchMouseDrag(){
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY, 1, false);
-		if (drawContainerPanel.contains(thisX, thisY)){
+	protected void dispatchMouseDrag(){		
+		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
+			MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY - topSize, 1, false);
 			drawPanel.dispatchEvent(e);
 		}
 		if (fakeMouse != cursorActive){
