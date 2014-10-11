@@ -12,13 +12,20 @@ import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 
 
-public class KinectDesign extends PcDesign {	
+public class KinectDesign extends PcDesign {
+	public static final int SIZE_FACTOR = 64;
+	
 	Kinect k;
 	VideoPanel videoPanel;
 	BufferedImage fakeMouse;
@@ -30,30 +37,55 @@ public class KinectDesign extends PcDesign {
 	int topSize;
 
 	public KinectDesign(){	
-		setVisible(false);
+		setVisible(false);					// Hide while initializing
 		videoPanel = new VideoPanel();
-		cl = getClass().getClassLoader();
+		cl = getClass().getClassLoader();	// Class loader must be reinstantiated (different paths)
 		
 		thisX = frameWidth / 2;
-		thisY = (int) (frameHeight *0.75);
-		
+		thisY = (int) (frameHeight *0.75);		
 		
 		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");
-		
 		setUpGlassPane();
 		setUpTopPanel();
-		// KINECT INITIALIZATION
+		setUpMenuBar();
+		setUpKinect();
+		initDrawPanel(imgW, imgH - SIZE_FACTOR/2);
+		createNewImage(imgW, imgH);
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
+		setVisible(true);		
+	}
+	
+	protected void setUpMenuBar(){
+		Border genericBorder = new LineBorder(Color.black, 1);
+		Font genericFont = new Font("Courier", Font.PLAIN, 30);
+		Dimension d = new Dimension(SIZE_FACTOR * 2, SIZE_FACTOR);
+		
+		JMenuBar menubar = getJMenuBar();
+		menubar.setPreferredSize(new Dimension(frameWidth, SIZE_FACTOR));
+		for (int i = 0; i < menubar.getMenuCount(); i++){
+			JMenu menu = menubar.getMenu(i);
+			menu.setBorder(genericBorder);
+			menu.setFont(genericFont);
+			menu.setPreferredSize(d);
+			for (int j = 0; j < menu.getItemCount(); j++){
+				JMenuItem item = menu.getItem(j);
+				item.setBorder(genericBorder);
+				item.setFont(genericFont);
+				item.setPreferredSize(d);
+			}
+		}
+	}
+	
+	protected void setUpKinect(){
 		k = new Kinect();				
-		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_320x240, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
+		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_80x60, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
 			System.out.println("Error starting kinect.");
 		}
-		k.computeUV(true);
-		k.startSkeletonTracking(false); // buvo false jei crashins
+		k.computeUV(false);	// show video?
+		k.startSkeletonTracking(true); // track only head + hands?
 		k.setNearMode(true);
 		k.videoPanel = videoPanel;
 		k.k = this;
-		// KINECT INITIALIZATION	
-		setVisible(true);
 	}
 	
 	protected void setUpGlassPane(){
@@ -100,15 +132,16 @@ public class KinectDesign extends PcDesign {
 		
 		// Changing the old size chooser (new is buttons, easier to use)
 		JPanel opts = ((JPanel)c[1]);
+		opts.remove(1);
 		opts.remove(0);
 		JPanel size = new JPanel();
 		opts.add(size, 0);
 		size.setLayout(new GridLayout(1, 3));
 		final JLabel sizeLabel = new JLabel("8", SwingConstants.CENTER);
 		sizeLabel.setBorder(new LineBorder(Color.black));
-		sizeLabel.setFont(new Font("Serif", Font.BOLD, 35));
+		sizeLabel.setFont(new Font("Courier", Font.BOLD, 42));
 		JButton minus = new JButton("-");
-		minus.setFont(new Font("Serif", Font.BOLD, 35));
+		minus.setFont(new Font("Courier", Font.BOLD, 60));
 		minus.addMouseListener(new core.LightweightMouseListener(){
 			@Override
 			public void mousePressed(MouseEvent e) {
@@ -121,7 +154,7 @@ public class KinectDesign extends PcDesign {
 			}
 		});
 		JButton plus = new JButton("+");
-		plus.setFont(new Font("Serif", Font.BOLD, 35));
+		plus.setFont(new Font("Courier", Font.BOLD, 60));
 		plus.addMouseListener(new core.LightweightMouseListener(){
 			@Override
 			public void mousePressed(MouseEvent e) {

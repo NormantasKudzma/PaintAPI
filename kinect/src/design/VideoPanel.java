@@ -12,7 +12,7 @@ public class VideoPanel extends OpenGLPanel {
 	
 	DepthMap map = null;
 	VideoFrame videoTexture;
-	Skeleton skeletons[];
+	CustomSkeleton skeletons[];
 	
 	@Override
 	public void setup() {
@@ -35,7 +35,7 @@ public class VideoPanel extends OpenGLPanel {
 		gl.glEnable(GL2.GL_LIGHTING);
 		gl.glColor3f(0.9f,0.9f,0.9f);
 		
-		skeletons = new Skeleton[Kinect.NUI_SKELETON_COUNT];
+		skeletons = new CustomSkeleton[Kinect.NUI_SKELETON_COUNT];
 		videoTexture = new VideoFrame();		
 	    background(0, 0, 0);
 	}

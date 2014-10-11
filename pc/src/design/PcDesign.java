@@ -204,7 +204,6 @@ public class PcDesign extends JFrame{
 				float treshold = paint.getBrushSize() * 0.15f;
 				if (dist > treshold){
 					paint.drawCenteredLine(lastX, lastY, x, y);
-					System.out.printf("%d\t%d\t%d\t%d\n", lastX, lastY, x, y);
 				}
 				else {
 					paint.drawCenteredPixel(lastX, lastY);
@@ -504,6 +503,16 @@ public class PcDesign extends JFrame{
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
 		
+		JMenuItem exit = new JMenuItem("Exit");
+		exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		file.add(exit);
+		
 		JMenu edit = new JMenu("Edit..");
 		menuBar.add(edit);
 		
@@ -517,6 +526,30 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
+		
+		JMenu help = new JMenu("Help..");
+		menuBar.add(help);
+		
+		JMenuItem howto = new JMenuItem("How to use paint");
+		howto.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		help.add(howto);
+		
+		JMenuItem about = new JMenuItem("About");
+		about.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(PcDesign.this, new JLabel("Kas nors užpildys vėliau"));
+			}
+		});
+		help.add(about);
 	}
 	
 	public void createImageFrom(BufferedImage b){
