@@ -45,7 +45,7 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 	
 	@Override
 	protected void buildChooser() {
-		setLayout(new GridLayout(2, 6));
+		setLayout(new GridLayout(0, 2));
 		ButtonGroup buttons = new ButtonGroup();
 		
 		for (int i = 0; i < all.length; i++){

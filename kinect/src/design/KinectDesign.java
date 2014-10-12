@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
@@ -30,11 +31,12 @@ public class KinectDesign extends PcDesign {
 	VideoPanel videoPanel;
 	BufferedImage fakeMouse;
 	JPanel glass;
+	JPanel rightPanel;
 	
 	BufferedImage cursor;
 	BufferedImage cursorActive;
 	public int thisX, thisY;
-	int topSize;
+	int sidePanelWidth; // pakeisti i ploti ir tikrint abiem pusem
 
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
@@ -44,15 +46,17 @@ public class KinectDesign extends PcDesign {
 		thisX = frameWidth / 2;
 		thisY = (int) (frameHeight *0.75);		
 		
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
+		
 		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");
-		setUpGlassPane();
-		setUpTopPanel();
 		setUpMenuBar();
 		setUpKinect();
-		initDrawPanel(imgW, imgH - SIZE_FACTOR/2);
-		createNewImage(imgW, imgH);
-		setExtendedState(JFrame.MAXIMIZED_BOTH);
-		setVisible(true);		
+		setUpGlassPane();
+		setVisible(true);		// Setvisible before resizing to calculate new max sizes
+		setUpPanels();
+
+		initDrawPanel(imgW, imgH);
+		createNewImage(imgW, imgH);		
 	}
 	
 	protected void setUpMenuBar(){
@@ -71,7 +75,7 @@ public class KinectDesign extends PcDesign {
 				JMenuItem item = menu.getItem(j);
 				item.setBorder(genericBorder);
 				item.setFont(genericFont);
-				item.setPreferredSize(d);
+				item.setPreferredSize(new Dimension(item.getPreferredSize().width, d.height));
 			}
 		}
 	}
@@ -82,7 +86,7 @@ public class KinectDesign extends PcDesign {
 			System.out.println("Error starting kinect.");
 		}
 		k.computeUV(false);	// show video?
-		k.startSkeletonTracking(true); // track only head + hands?
+		//k.startSkeletonTracking(true); // track only head + hands? (not needed anymore)
 		k.setNearMode(true);
 		k.videoPanel = videoPanel;
 		k.k = this;
@@ -109,34 +113,45 @@ public class KinectDesign extends PcDesign {
 		glass.repaint();
 	}
 	
-	protected void setUpTopPanel(){
-		int newWidth = PcDesign.frameWidth;
+	protected void setUpPanels(){
+		// Change the layout first of all
+		setLayout(new BoxLayout(this.getContentPane(), BoxLayout.X_AXIS));
+		
+		//int newWidth = PcDesign.frameWidth;
 		// Resize old components, so there's place for video frame
 		Component [] c = topPanel.getComponents();		
-		topSize = topPanel.getHeight();
+		sidePanelWidth = (int) (this.getWidth() * 0.12f);
 		
-		for (int i = 0; i < c.length; i++){
-			JPanel p = (JPanel)c[i];
-			Dimension d = p.getMaximumSize();
-			newWidth -= d.width * 0.85f;
-			p.setMaximumSize(new Dimension((int) (d.width * 0.85f), d.height));
-		}		
+		// New dimensions for side panels
+		Dimension maxSidePanelDim = new Dimension(sidePanelWidth, (int) (frameHeight * 0.95f));
+		topPanel.setMaximumSize(maxSidePanelDim);
+		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
 		
-		// Changing JColorChooser's color palette to our huge color buttons
-		Dimension d = c[0].getMaximumSize();
-		d.width *= 0.85f;
-		d.height *= 0.80f;
-		KinectColorChooser [] kcc = {new KinectColorChooser(d)};	
+		int maxW = (int) (sidePanelWidth * 0.95f);
+		int maxH = (int) (frameHeight * 0.95f);
+		Dimension maxInnerPanelDim = new Dimension(maxW, maxH);
+		
+		frameWidth = this.getWidth();
+		frameHeight = this.getHeight();
+		imgW = (int) (frameWidth - 2 * sidePanelWidth * 0.99f);
+		imgH = frameHeight;
+		drawContainerPanel.setMaximumSize(new Dimension(imgW, imgH));
+		
+		// Resize color chooser panel and swap swatches for our custom color chooser
+		KinectColorChooser [] kcc = {new KinectColorChooser(maxInnerPanelDim)};	
 		JColorChooser jcc = (JColorChooser)((JPanel)c[0]).getComponent(0);
 		jcc.setChooserPanels(kcc);
-		
+		jcc.setMaximumSize(maxInnerPanelDim);
+		c[0].setMaximumSize(maxSidePanelDim);
+
 		// Changing the old size chooser (new is buttons, easier to use)
 		JPanel opts = ((JPanel)c[1]);
 		opts.remove(1);
 		opts.remove(0);
+		opts.setMaximumSize(new Dimension(maxInnerPanelDim.width, (int) (maxInnerPanelDim.height * 0.5f)));
 		JPanel size = new JPanel();
 		opts.add(size, 0);
-		size.setLayout(new GridLayout(1, 3));
+		size.setLayout(new GridLayout(3, 1));
 		final JLabel sizeLabel = new JLabel("8", SwingConstants.CENTER);
 		sizeLabel.setBorder(new LineBorder(Color.black));
 		sizeLabel.setFont(new Font("Courier", Font.BOLD, 42));
@@ -167,14 +182,26 @@ public class KinectDesign extends PcDesign {
 			}
 		});
 		updateBrush(8);				
-		size.add(minus);
-		size.add(sizeLabel);
 		size.add(plus);
+		size.add(sizeLabel);
+		size.add(minus);
 		opts.revalidate();
 		opts.repaint();
 		
-		videoPanel.setMaximumSize(new Dimension(newWidth, topPanel.getHeight()));		
-		topPanel.add(videoPanel);
+		// New - rightside panel, top panel becomes leftside panel
+		rightPanel = new JPanel();
+		topPanel.remove(c[1]);
+		topPanel.remove(c[2]);
+		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+		rightPanel.setMaximumSize(maxSidePanelDim);
+		videoPanel.setMaximumSize(new Dimension(maxSidePanelDim.width, maxSidePanelDim.width));
+		rightPanel.add(videoPanel);
+		rightPanel.add(c[1]);
+		rightPanel.add(c[2]);
+		add(rightPanel);
+		
+		rightPanel.revalidate();
+		rightPanel.repaint();
 		topPanel.revalidate();
 		topPanel.repaint();
 	}
@@ -182,7 +209,7 @@ public class KinectDesign extends PcDesign {
 	protected void dispatchMouseClick(){
 		MouseEvent e;
 		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY - topSize, 1, false);
+			e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY - sidePanelWidth, 1, false);
 			drawPanel.dispatchEvent(e);
 		}
 		else {
@@ -196,7 +223,7 @@ public class KinectDesign extends PcDesign {
 	
 	protected void dispatchMouseDrag(){		
 		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY - topSize, 1, false);
+			MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY - sidePanelWidth, 1, false);
 			drawPanel.dispatchEvent(e);
 		}
 		if (fakeMouse != cursorActive){
