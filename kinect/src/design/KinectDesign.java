@@ -24,9 +24,7 @@ import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 
 
-public class KinectDesign extends PcDesign {
-	public static final int SIZE_FACTOR = 64;
-	
+public class KinectDesign extends PcDesign {	
 	Kinect k;
 	VideoPanel videoPanel;
 	BufferedImage fakeMouse;
@@ -36,7 +34,8 @@ public class KinectDesign extends PcDesign {
 	BufferedImage cursor;
 	BufferedImage cursorActive;
 	public int thisX, thisY;
-	int sidePanelWidth; // pakeisti i ploti ir tikrint abiem pusem
+	int sidePanelWidth;		// pakeisti i ploti ir tikrint abiem pusem
+	int menuHeight = 64;	// irgi peles kontrolei svarbus
 
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
@@ -51,8 +50,9 @@ public class KinectDesign extends PcDesign {
 		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");
 		setUpMenuBar();
 		setUpKinect();
-		setUpGlassPane();
+		
 		setVisible(true);		// Setvisible before resizing to calculate new max sizes
+		setUpGlassPane();
 		setUpPanels();
 
 		initDrawPanel(imgW, imgH);
@@ -62,10 +62,10 @@ public class KinectDesign extends PcDesign {
 	protected void setUpMenuBar(){
 		Border genericBorder = new LineBorder(Color.black, 1);
 		Font genericFont = new Font("Courier", Font.PLAIN, 30);
-		Dimension d = new Dimension(SIZE_FACTOR * 2, SIZE_FACTOR);
+		Dimension d = new Dimension(menuHeight * 2, menuHeight);
 		
 		JMenuBar menubar = getJMenuBar();
-		menubar.setPreferredSize(new Dimension(frameWidth, SIZE_FACTOR));
+		menubar.setPreferredSize(new Dimension(frameWidth, menuHeight));
 		for (int i = 0; i < menubar.getMenuCount(); i++){
 			JMenu menu = menubar.getMenu(i);
 			menu.setBorder(genericBorder);
@@ -85,7 +85,7 @@ public class KinectDesign extends PcDesign {
 		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_80x60, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
 			System.out.println("Error starting kinect.");
 		}
-		k.computeUV(false);	// show video?
+		k.computeUV(true);	// show video?
 		//k.startSkeletonTracking(true); // track only head + hands? (not needed anymore)
 		k.setNearMode(true);
 		k.videoPanel = videoPanel;
@@ -117,7 +117,6 @@ public class KinectDesign extends PcDesign {
 		// Change the layout first of all
 		setLayout(new BoxLayout(this.getContentPane(), BoxLayout.X_AXIS));
 		
-		//int newWidth = PcDesign.frameWidth;
 		// Resize old components, so there's place for video frame
 		Component [] c = topPanel.getComponents();		
 		sidePanelWidth = (int) (this.getWidth() * 0.12f);
@@ -134,7 +133,7 @@ public class KinectDesign extends PcDesign {
 		frameWidth = this.getWidth();
 		frameHeight = this.getHeight();
 		imgW = (int) (frameWidth - 2 * sidePanelWidth * 0.99f);
-		imgH = frameHeight;
+		imgH = (int) (frameHeight * 0.95f - getJMenuBar().getHeight());
 		drawContainerPanel.setMaximumSize(new Dimension(imgW, imgH));
 		
 		// Resize color chooser panel and swap swatches for our custom color chooser
@@ -209,7 +208,8 @@ public class KinectDesign extends PcDesign {
 	protected void dispatchMouseClick(){
 		MouseEvent e;
 		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY - sidePanelWidth, 1, false);
+			e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_PRESSED, 0, 0, 
+					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
 			drawPanel.dispatchEvent(e);
 		}
 		else {
@@ -223,7 +223,8 @@ public class KinectDesign extends PcDesign {
 	
 	protected void dispatchMouseDrag(){		
 		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0, thisX, thisY - sidePanelWidth, 1, false);
+			MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0,
+					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
 			drawPanel.dispatchEvent(e);
 		}
 		if (fakeMouse != cursorActive){

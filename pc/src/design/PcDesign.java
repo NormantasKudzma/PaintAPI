@@ -43,6 +43,7 @@ import javax.swing.event.ChangeListener;
 
 import core.CustomStroke;
 import core.Filters;
+import core.LightweightMouseListener;
 import core.PaintBase;
 import core.RectShape;
 import core.StarShape;
@@ -50,7 +51,7 @@ import core.TriangleShape;
 
 
 public class PcDesign extends JFrame{
-	public class BrushShapeListener implements MouseListener {
+	public class BrushShapeListener extends LightweightMouseListener {
 		private String shapeName;
 		private Container parent;
 		
@@ -64,22 +65,10 @@ public class PcDesign extends JFrame{
 		}
 		
 		@Override
-		public void mouseClicked(MouseEvent e) {}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {}
-
-		@Override
-		public void mouseExited(MouseEvent e) {}
-
-		@Override
 		public void mousePressed(MouseEvent e) {
 			updateBrush(shapeName);
 			parent.dispatchEvent(e);
 		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {}	
 	}
 	
 	protected static int frameWidth = 1280;
@@ -166,10 +155,7 @@ public class PcDesign extends JFrame{
 		};		
 		drawPanel.setPreferredSize(new Dimension(imgW, imgH));
 		drawPanel.setBackground(Color.white);
-		drawPanel.addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {}
+		drawPanel.addMouseListener(new LightweightMouseListener() {
 			
 			@Override
 			public void mousePressed(MouseEvent e) {			
@@ -330,13 +316,15 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					JLabel highlight = ((JLabel)e.getSource());
+					if (e.getSource() instanceof JLabel){
+						JLabel highlight = ((JLabel)e.getSource());
 					for (JLabel i : shapes){
 						i.setOpaque(false);
 						i.repaint();
 					}
 					highlight.setOpaque(true);
 					highlight.setBackground(Color.orange);
+					}					
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
