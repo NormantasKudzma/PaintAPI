@@ -14,7 +14,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.DecimalFormat;
@@ -24,6 +23,7 @@ import java.util.Locale;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -43,13 +43,15 @@ import javax.swing.event.ChangeListener;
 
 import core.CustomStroke;
 import core.Filters;
+import core.LightweightMouseListener;
 import core.PaintBase;
+import core.RectShape;
 import core.StarShape;
 import core.TriangleShape;
 
 
 public class PcDesign extends JFrame{
-	public class BrushShapeListener implements MouseListener {
+	public class BrushShapeListener extends LightweightMouseListener {
 		private String shapeName;
 		private Container parent;
 		
@@ -63,52 +65,40 @@ public class PcDesign extends JFrame{
 		}
 		
 		@Override
-		public void mouseClicked(MouseEvent e) {}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {}
-
-		@Override
-		public void mouseExited(MouseEvent e) {}
-
-		@Override
 		public void mousePressed(MouseEvent e) {
-			updateBrush(paint.getBrush().getSize(), shapeName);
+			updateBrush(shapeName);
 			parent.dispatchEvent(e);
 		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {}	
 	}
 	
-	private static int frameWidth = 1280;
-	private static int frameHeight = 720;
-	private static final String RES_PATH = "res/";
-	private static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
+	protected static int frameWidth = 1280;
+	protected static int frameHeight = 720;
+	protected static final String RES_PATH = "res/";
+	protected static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
 	
-	private JMenuBar menuBar;
-	private JPanel drawContainerPanel;
-	private JPanel drawPanel;
-	private JPanel topPanel;
+	protected JMenuBar menuBar;
+	protected JPanel drawContainerPanel;
+	protected JPanel drawPanel;
+	protected JPanel topPanel;
         
-    private File filetosave;
-    private File filetoload;
-    private Filters f = new Filters();
-	private PaintBase paint;
-	private BufferedImage drawing;
-	private ClassLoader cl = getClass().getClassLoader();
-	private String currentShape = "rect";
+    protected File filetosave;
+    protected File filetoload;
+    protected Filters f = new Filters();
+	protected PaintBase paint;
+	protected BufferedImage drawing;
+	protected ClassLoader cl = getClass().getClassLoader();
+	protected String currentShape = "rect";
 	
-	private int maxImgW = 0;
-	private int maxImgH = 0;
-	private int imgW = 0;
-	private int imgH = 0;
+	protected int maxImgW = 0;
+	protected int maxImgH = 0;
+	protected int imgW = 0;
+	protected int imgH = 0;
 	
-	private int lastX = 0;
-	private int lastY = 0;
+	protected int lastX = 0;
+	protected int lastY = 0;
 	
 	public PcDesign(){
-		this(frameWidth, frameHeight);              
+		this(frameWidth, frameHeight);
 	}
 	
 	public PcDesign(int frameW, int frameH){
@@ -118,7 +108,7 @@ public class PcDesign extends JFrame{
 		createNewImage(imgW, imgH);
 	}
 	
-	private void initFrame(int w, int h){
+	protected void initFrame(int w, int h){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(w, h);
 		setTitle("The amazing paint program for PC v0.1");
@@ -128,7 +118,7 @@ public class PcDesign extends JFrame{
 		setVisible(true);
 	}
 	
-	private void initLayout(){
+	protected void initLayout(){
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -145,7 +135,7 @@ public class PcDesign extends JFrame{
 		configureMenuBar();
 	}
 	
-	private void initDrawPanel(int w, int h){
+	protected void initDrawPanel(int w, int h){
         if (drawPanel != null){
 			drawContainerPanel.remove(drawPanel);
 			drawContainerPanel.revalidate();
@@ -165,15 +155,13 @@ public class PcDesign extends JFrame{
 		};		
 		drawPanel.setPreferredSize(new Dimension(imgW, imgH));
 		drawPanel.setBackground(Color.white);
-		drawPanel.addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {}
+		drawPanel.addMouseListener(new LightweightMouseListener() {
 			
 			@Override
 			public void mousePressed(MouseEvent e) {			
 				lastX = e.getX();
 				lastY = e.getY();
+				mouseClicked(e);
 			}
 			
 			@Override
@@ -203,7 +191,6 @@ public class PcDesign extends JFrame{
 				float treshold = paint.getBrushSize() * 0.15f;
 				if (dist > treshold){
 					paint.drawCenteredLine(lastX, lastY, x, y);
-
 				}
 				else {
 					paint.drawCenteredPixel(lastX, lastY);
@@ -219,7 +206,7 @@ public class PcDesign extends JFrame{
 		drawContainerPanel.repaint();
 	}
 	
-	private void initTopPanel(){
+	protected void initTopPanel(){
 		topPanel = new JPanel();
 		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
 		topPanel.setMaximumSize(new Dimension(frameWidth, (int)(0.2 * frameHeight)));
@@ -255,6 +242,7 @@ public class PcDesign extends JFrame{
 		JPanel brushSizePicker = new JPanel();
 		brushSizePicker.setMaximumSize(new Dimension((int)(w * 0.25), maxHeight));
 		brushSizePicker.setBorder(BorderFactory.createTitledBorder("Size"));
+		brushSizePicker.setLayout(new GridLayout(0, 1));
 		topPanel.add(brushSizePicker);
 		
 		Integer [] sizes = {1, 2, 4, 8, 12, 16, 24, 36, 48, 64, 128};
@@ -268,7 +256,7 @@ public class PcDesign extends JFrame{
 				try {
 					JComboBox<Integer> c = (JComboBox) e.getSource();
 					int size = (Integer)c.getSelectedItem();
-					updateBrush(size, currentShape);
+					updateBrush(size);
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -276,6 +264,26 @@ public class PcDesign extends JFrame{
 			}
 		});
 		brushSizePicker.add(sizebox);
+		
+		Double [] rotations = {0d, 30d, 60d, 90d, 120d, 150d, 180d, 210d, 240d, 270d, 300d, 330d};
+		JComboBox<Double> rbox = new JComboBox<Double>(rotations);
+		rbox.setSelectedIndex(0);
+		rbox.setEditable(true);
+		rbox.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					JComboBox<Integer> c = (JComboBox) e.getSource();
+					double r = (Double)c.getSelectedItem();
+					updateBrush(r);
+				}
+				catch (Exception ex){
+					ex.printStackTrace();
+				}
+			}		
+		});
+		brushSizePicker.add(rbox);
 		
 		// Brush shape picker
 		JPanel brushShapePicker = new JPanel();
@@ -308,13 +316,15 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					JLabel highlight = ((JLabel)e.getSource());
+					if (e.getSource() instanceof JLabel){
+						JLabel highlight = ((JLabel)e.getSource());
 					for (JLabel i : shapes){
 						i.setOpaque(false);
 						i.repaint();
 					}
 					highlight.setOpaque(true);
 					highlight.setBackground(Color.orange);
+					}					
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -323,12 +333,25 @@ public class PcDesign extends JFrame{
 		});
 	}
 	
-	private void updateBrush(int size, String type){
+	protected void updateBrush(int size){
+		updateBrush(size, paint.getBrushRotation(), currentShape);
+	}
+	
+	protected void updateBrush(String type){
+		updateBrush(paint.getBrushSize(), paint.getBrushRotation(), type);
+	}
+	
+	protected void updateBrush(double rotation){
+		updateBrush(paint.getBrushSize(), rotation, currentShape);
+	}
+	
+	protected void updateBrush(int size, double rotation, String type){
 		paint.setBrushSize(size);
+		paint.setBrushRotation(rotation);
 		currentShape = type;
 		switch(type){
 			case "rect":{
-				paint.setCustomStroke(new CustomStroke(new Rectangle2D.Float(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new RectShape(0, 0, size, size, rotation), size * 0.25f));
 				break;
 			}
 			case "circle":{
@@ -336,17 +359,17 @@ public class PcDesign extends JFrame{
 				break;
 			}		
 			case "star":{
-				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size, rotation), size * 0.25f));
 				break;
 			}
 			case "triangle":{
-				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size, rotation), size * 0.25f));
 				break;
 			}
 		}
 	}
 	
-	private void configureMenuBar(){
+	protected void configureMenuBar(){
 		JMenu file = new JMenu("File..");
 		menuBar.add(file);
 		
@@ -469,6 +492,16 @@ public class PcDesign extends JFrame{
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
 		
+		JMenuItem exit = new JMenuItem("Exit");
+		exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		file.add(exit);
+		
 		JMenu edit = new JMenu("Edit..");
 		menuBar.add(edit);
 		
@@ -482,6 +515,30 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
+		
+		JMenu help = new JMenu("Help..");
+		menuBar.add(help);
+		
+		JMenuItem howto = new JMenuItem("How to use paint");
+		howto.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		help.add(howto);
+		
+		JMenuItem about = new JMenuItem("About");
+		about.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(PcDesign.this, new JLabel("Kas nors užpildys vėliau"));
+			}
+		});
+		help.add(about);
 	}
 	
 	public void createImageFrom(BufferedImage b){

@@ -8,9 +8,9 @@ import java.awt.geom.Rectangle2D;
 
 public class PaintBase {
 	public static final int DEFAULT_SIZE = 4;
+	public static final double DEFAULT_ROTATION = 0;
 	public static final Color DEFAULT_COLOR = Color.black;
 	public static final CustomStroke DEFAULT_STROKE = new CustomStroke(new Rectangle2D.Float(0, 0, DEFAULT_SIZE, DEFAULT_SIZE), DEFAULT_SIZE / 2);
-	//public static final CustomStroke DEFAULT_STROKE = new CustomStroke(new StarShape(0, 0, DEFAULT_SIZE, DEFAULT_SIZE), DEFAULT_SIZE / 2);
 	
 	protected Graphics2D g;
 	protected Brush brush;
@@ -19,6 +19,7 @@ public class PaintBase {
 		brush = new Brush();
 		brush.setColor(DEFAULT_COLOR);
 		brush.setSize(DEFAULT_SIZE);
+		brush.setRotation(DEFAULT_ROTATION);
 		brush.setCustomStroke(DEFAULT_STROKE);
 	}
 	
@@ -61,6 +62,14 @@ public class PaintBase {
 	public void setCustomStroke(CustomStroke cc){
 		g.setStroke(cc);
 		brush.setCustomStroke(cc);
+	}
+	
+	public void setBrushRotation(double r){
+		brush.setRotation(r);
+	}
+	
+	public double getBrushRotation(){
+		return brush.getRotation();
 	}
 	
 	public void setBrushColor(Color c){
