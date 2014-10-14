@@ -107,6 +107,8 @@ public class PcDesign extends JFrame{
 	private int lastX = 0;
 	private int lastY = 0;
 	
+	private String tool = "basic";
+	
 	public PcDesign(){
 		this(frameWidth, frameHeight);              
 	}
@@ -168,7 +170,13 @@ public class PcDesign extends JFrame{
 		drawPanel.addMouseListener(new MouseListener() {
 			
 			@Override
-			public void mouseReleased(MouseEvent e) {}
+			public void mouseReleased(MouseEvent e) {
+				switch(tool){
+				case "strline":
+					paint.drawCenteredLine(lastX, lastY, e.getX(), e.getY());
+				}
+				drawPanel.repaint();
+			}
 			
 			@Override
 			public void mousePressed(MouseEvent e) {			
@@ -188,7 +196,8 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				paint.drawCenteredPixel(e.getX(), e.getY());
+				if(tool == "basic")
+					paint.drawCenteredPixel(e.getX(), e.getY());
 				drawPanel.repaint();
 			}
 		});
@@ -198,19 +207,22 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				int x = e.getX(), y = e.getY();
-				float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
-				float treshold = paint.getBrushSize() * 0.15f;
-				if (dist > treshold){
-					paint.drawCenteredLine(lastX, lastY, x, y);
+				switch(tool){
+				case "basic":
+					int x = e.getX(), y = e.getY();
+					float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
+					float treshold = paint.getBrushSize() * 0.15f;
+					if (dist > treshold){
+						paint.drawCenteredLine(lastX, lastY, x, y);
 
-				}
-				else {
-					paint.drawCenteredPixel(lastX, lastY);
-				}
-				lastX = x;
-				lastY = y;
-				drawPanel.repaint();
+					}
+					else {
+						paint.drawCenteredPixel(lastX, lastY);
+					}
+					lastX = x;
+					lastY = y;
+					drawPanel.repaint();				
+				}				
 			}
 		});
 		drawContainerPanel.add(drawPanel, BorderLayout.CENTER);
@@ -406,6 +418,20 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				Object[] options = {"Local device", "Google drive", "Cancel"};
+				JLabel warning = new JLabel("Save to:");
+				int result = JOptionPane.showOptionDialog(null, warning, "Select where to save",
+						JOptionPane.YES_NO_CANCEL_OPTION,
+					    JOptionPane.QUESTION_MESSAGE,
+					    null,
+					    options,
+					    options[2]);
+				
+				if (result == JOptionPane.CANCEL_OPTION){
+					return;
+				}
+				
+				if (result == JOptionPane.YES_OPTION){
 				JFileChooser c = new JFileChooser(){
                                     
                                     // Confirmation box if file with the same name already exists
@@ -463,6 +489,11 @@ public class PcDesign extends JFrame{
                                         y.printStackTrace();
                                     }
                                 }
+				}
+				
+				if (result == JOptionPane.NO_OPTION){
+					return;
+				}
 			}
 		});
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
@@ -482,6 +513,29 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
+		
+		JMenu tools = new JMenu("Tools..");
+		menuBar.add(tools);
+		
+		JMenuItem basic = new JMenuItem("Basic");
+		basic.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e){
+				tool = "basic";
+			}
+		});
+		tools.add(basic);
+		
+		JMenuItem strline = new JMenuItem("Straight line");
+		strline.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e){
+				tool = "strline";
+			}
+		});
+		tools.add(strline);
 	}
 	
 	public void createImageFrom(BufferedImage b){
