@@ -49,16 +49,18 @@ public class KinectDesign extends PcDesign {
 		
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		
-		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");
-		setUpMenuBar();
+		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");		
 		setUpKinect();
 		
 		setVisible(true);		// Setvisible before resizing to calculate new max sizes
+		setUpMenuBar();
 		setUpGlassPane();
 		setUpPanels();
 
 		initDrawPanel(imgW, imgH);
-		createNewImage(imgW, imgH);		
+		createNewImage(imgW, imgH);	
+		//
+		System.out.println();
 	}
 	
 	protected void setUpMenuBar(){
@@ -143,6 +145,7 @@ public class KinectDesign extends PcDesign {
 		frameHeight = this.getHeight();
 		imgW = (int) (frameWidth - 2 * sidePanelWidth * 0.99f);
 		imgH = (int) (frameHeight * 0.95f - getJMenuBar().getHeight());
+		//drawContainerPanel.setBounds(sidePanelWidth, menuHeight, imgW, imgH);
 		drawContainerPanel.setMaximumSize(new Dimension(imgW, imgH));
 		
 		// Resize color chooser panel and swap swatches for our custom color chooser
@@ -232,7 +235,8 @@ public class KinectDesign extends PcDesign {
 	
 	protected void dispatchMouseDrag(){		
 		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_DRAGGED, 0, 0,
+			// What source?
+			MouseEvent e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_DRAGGED, 0, 0,
 					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
 			drawPanel.dispatchEvent(e);
 		}

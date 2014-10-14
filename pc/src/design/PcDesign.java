@@ -201,8 +201,7 @@ public class PcDesign extends JFrame{
 			}
 		});
 		drawContainerPanel.add(drawPanel, BorderLayout.CENTER);
-		drawContainerPanel.revalidate();
-				
+		drawContainerPanel.revalidate();				
 		drawContainerPanel.repaint();
 	}
 	
