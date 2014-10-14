@@ -24,6 +24,7 @@ import java.util.regex.*;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -43,6 +44,7 @@ import javax.swing.event.ChangeListener;
 
 import core.CustomStroke;
 import core.Filters;
+import core.LightweightMouseListener;
 import core.PaintBase;
 import core.RectShape;
 import core.StarShape;
@@ -50,7 +52,7 @@ import core.TriangleShape;
 
 
 public class PcDesign extends JFrame{
-	public class BrushShapeListener implements MouseListener {
+	public class BrushShapeListener extends LightweightMouseListener {
 		private String shapeName;
 		private Container parent;
 		
@@ -64,22 +66,10 @@ public class PcDesign extends JFrame{
 		}
 		
 		@Override
-		public void mouseClicked(MouseEvent e) {}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {}
-
-		@Override
-		public void mouseExited(MouseEvent e) {}
-
-		@Override
 		public void mousePressed(MouseEvent e) {
 			updateBrush(shapeName);
 			parent.dispatchEvent(e);
 		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {}	
 	}
 	
 	protected static int frameWidth = 1280;
@@ -109,7 +99,7 @@ public class PcDesign extends JFrame{
 	protected int lastY = 0;
 	
 	public PcDesign(){
-		this(frameWidth, frameHeight);              
+		this(frameWidth, frameHeight);
 	}
 	
 	public PcDesign(int frameW, int frameH){
@@ -166,15 +156,13 @@ public class PcDesign extends JFrame{
 		};		
 		drawPanel.setPreferredSize(new Dimension(imgW, imgH));
 		drawPanel.setBackground(Color.white);
-		drawPanel.addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {}
+		drawPanel.addMouseListener(new LightweightMouseListener() {
 			
 			@Override
 			public void mousePressed(MouseEvent e) {			
 				lastX = e.getX();
 				lastY = e.getY();
+				mouseClicked(e);
 			}
 			
 			@Override
@@ -204,7 +192,6 @@ public class PcDesign extends JFrame{
 				float treshold = paint.getBrushSize() * 0.15f;
 				if (dist > treshold){
 					paint.drawCenteredLine(lastX, lastY, x, y);
-
 				}
 				else {
 					paint.drawCenteredPixel(lastX, lastY);
@@ -350,13 +337,15 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					JLabel highlight = ((JLabel)e.getSource());
+					if (e.getSource() instanceof JLabel){
+						JLabel highlight = ((JLabel)e.getSource());
 					for (JLabel i : shapes){
 						i.setOpaque(false);
 						i.repaint();
 					}
 					highlight.setOpaque(true);
 					highlight.setBackground(Color.orange);
+					}					
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -524,6 +513,16 @@ public class PcDesign extends JFrame{
 	    saveFile.setAccelerator(ctrlS);
 		file.add(saveFile);
 		
+		JMenuItem exit = new JMenuItem("Exit");
+		exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		file.add(exit);
+		
 		JMenu edit = new JMenu("Edit..");
 		menuBar.add(edit);
 		
@@ -537,6 +536,30 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
+		
+		JMenu help = new JMenu("Help..");
+		menuBar.add(help);
+		
+		JMenuItem howto = new JMenuItem("How to use paint");
+		howto.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		help.add(howto);
+		
+		JMenuItem about = new JMenuItem("About");
+		about.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(PcDesign.this, new JLabel("Kas nors užpildys vėliau"));
+			}
+		});
+		help.add(about);
 	}
 	
 	public void createImageFrom(BufferedImage b){
