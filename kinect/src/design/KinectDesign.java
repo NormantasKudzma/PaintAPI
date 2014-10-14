@@ -23,6 +23,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 
+import core.LightweightMouseListener;
+
 
 public class KinectDesign extends PcDesign {	
 	Kinect k;
@@ -72,7 +74,14 @@ public class KinectDesign extends PcDesign {
 			menu.setFont(genericFont);
 			menu.setPreferredSize(d);
 			for (int j = 0; j < menu.getItemCount(); j++){
-				JMenuItem item = menu.getItem(j);
+				final JMenuItem item = menu.getItem(j);
+				item.addMouseListener(new LightweightMouseListener(){
+					@Override
+					public void mousePressed(MouseEvent e) {
+						/////// fix - mousepress = mouseclick jmenuitem
+						item.getMouseListeners()[0].mouseClicked(e);
+					}
+				});
 				item.setBorder(genericBorder);
 				item.setFont(genericFont);
 				item.setPreferredSize(new Dimension(item.getPreferredSize().width, d.height));
