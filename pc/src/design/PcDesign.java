@@ -213,7 +213,7 @@ public class PcDesign extends JFrame{
 					}
 					lastX = x;
 					lastY = y;
-					drawPanel.repaint();				
+					drawPanel.repaint();
 				}				
 			}
 		});
@@ -489,8 +489,22 @@ public class PcDesign extends JFrame{
                                 c.addChoosableFileFilter(f. new pngSaveFilter());
                                 
                                 c.setDialogTitle("Save drawing to current device");
-                                int rVal = c.showSaveDialog(PcDesign.this);
                                 
+                                // Set a default non-existing file name
+                                int x = 0;
+                                File jpg = new File("Image_" + x + ".jpg");
+                                File png = new File("Image_" + x + ".png");
+                                File def = new File("Image_" + x);
+                                
+                                while(jpg.exists() || png.exists()){
+                                	x++;
+                                	jpg = new File("Image_" + x + ".jpg");
+                                	png = new File("Image_" + x + ".png");
+                                	def = new File("Image_" + x);
+                                }
+                                
+                                c.setSelectedFile(def);
+                                int rVal = c.showSaveDialog(PcDesign.this);
                                 // Save pressed
                                 if(rVal==JFileChooser.APPROVE_OPTION) {
                                     String ext="png";
@@ -508,6 +522,8 @@ public class PcDesign extends JFrame{
                                     }
                                     
                                     filetosave = c.getSelectedFile();
+                                    String fileName = filetosave.getAbsolutePath() + "." + ext;
+                                    filetosave= new File(fileName);
                                     
                                     try{
                                         ImageIO.write(drawing, ext, filetosave);
