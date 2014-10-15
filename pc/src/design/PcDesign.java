@@ -20,7 +20,6 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.regex.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -49,6 +48,7 @@ import core.Filters;
 import core.LightweightMouseListener;
 import core.PaintBase;
 import core.RectShape;
+import core.Stack;
 import core.StarShape;
 import core.TriangleShape;
 
@@ -88,7 +88,7 @@ public class PcDesign extends JFrame{
     protected File filetoload;
     protected Filters f = new Filters();
 	protected PaintBase paint;
-	protected BufferedImage drawing;
+	public static BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
 	
@@ -100,6 +100,7 @@ public class PcDesign extends JFrame{
 	protected int lastX = 0;
 	protected int lastY = 0;
 	
+	protected Stack<BufferedImage> undoHistory;
 	private String tool = "basic";
 	
 	public PcDesign(){
@@ -111,6 +112,7 @@ public class PcDesign extends JFrame{
 		paint = new PaintBase();
 		initDrawPanel(imgW, imgH);
 		createNewImage(imgW, imgH);
+		undoHistory = new Stack<BufferedImage>();
 	}
 	
 	protected void initFrame(int w, int h){
@@ -175,19 +177,19 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
+				BufferedImage img = CloneImage();
+				undoHistory.push(img);
 				if (tool.equals("bucket")){					
-					final int x = e.getX(), y = e.getY();	
-					final int w = drawing.getWidth(), h = drawing.getHeight();
-					int [] arr = new int[w * h];
-					arr = drawing.getRGB(0, 0,w, h, arr, 0, w);
+					final int x = e.getX(), y = e.getY();					
+					int [] arr = new int[drawing.getWidth() * drawing.getHeight()];
+					arr = drawing.getRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arr, 0, drawing.getWidth());
 					final int arrr [] = arr;
-
+					
 					new Thread(new Runnable(){
 						@Override
 						public void run() {
-							// FILL SHAPE WITH TOLERANCE OF 0xF
-							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 32);
-							drawing.setRGB(0, 0, w, h, arrr, 0, w);
+							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, drawing.getWidth());
+							drawing.setRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arrr, 0, drawing.getWidth());
 							drawPanel.repaint();
 						}
 					}).start();
@@ -215,6 +217,7 @@ public class PcDesign extends JFrame{
 				}
 				drawPanel.repaint();
 			}
+
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
 			@Override
@@ -628,6 +631,23 @@ public class PcDesign extends JFrame{
 		tools.add(bucket);
 		
 		
+		JMenuItem undo = new JMenuItem("Undo");
+		undo.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				BufferedImage img = undoHistory.pop();
+				if(img != null){
+					initDrawPanel(img.getWidth(), img.getHeight());
+					createImageFrom(img);
+				}
+			}
+		});
+		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
+        undo.setAccelerator(ctrlZ);
+		edit.add(undo);
+        
+		
 		JMenu help = new JMenu("Help..");
 		menuBar.add(help);
 		
@@ -667,7 +687,6 @@ public class PcDesign extends JFrame{
 		imgW = w;
 		imgH = h;
 		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
-		drawing.getGraphics().fillRect(0, 0, w, h);
 		if (paint != null){
 			paint.setGraphics((Graphics2D) drawing.getGraphics());
 		}
@@ -718,6 +737,13 @@ public class PcDesign extends JFrame{
 		JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to continue?");
 		int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
 		return result;
+	}
+	
+	public BufferedImage CloneImage(){
+		 ColorModel cm = drawing.getColorModel();
+		 boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+		 WritableRaster raster = drawing.copyData(null);
+		 return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
 	}
 
 	public static void main(String [] args){
