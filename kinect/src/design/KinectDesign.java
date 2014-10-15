@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
@@ -32,13 +33,14 @@ public class KinectDesign extends PcDesign {
 	BufferedImage fakeMouse;
 	JPanel glass;
 	JPanel rightPanel;
+	private ArrayList<JMenuItem> menuItems = new ArrayList<JMenuItem>();
 	
 	BufferedImage cursor;
 	BufferedImage cursorActive;
 	public int thisX, thisY;
 	int sidePanelWidth;		// pakeisti i ploti ir tikrint abiem pusem
 	int menuHeight = 64;	// irgi peles kontrolei svarbus
-
+	
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
 		videoPanel = new VideoPanel();
@@ -77,11 +79,11 @@ public class KinectDesign extends PcDesign {
 			menu.setPreferredSize(d);
 			for (int j = 0; j < menu.getItemCount(); j++){
 				final JMenuItem item = menu.getItem(j);
+				menuItems.add(item);
 				item.addMouseListener(new LightweightMouseListener(){
 					@Override
 					public void mousePressed(MouseEvent e) {
-						/////// fix - mousepress = mouseclick jmenuitem
-						item.getMouseListeners()[0].mouseClicked(e);
+						item.doClick();
 					}
 				});
 				item.setBorder(genericBorder);
@@ -218,19 +220,11 @@ public class KinectDesign extends PcDesign {
 	}
 	
 	protected void dispatchMouseClick(){
-		MouseEvent e;
-		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_PRESSED, 0, 0, 
-					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
-			drawPanel.dispatchEvent(e);
-		}
-		else {
-			e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
-			this.dispatchEvent(e);
-		}
 		if (fakeMouse != cursorActive){
 			fakeMouse = cursorActive;
 		}
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
+		dispatchEvent(e);
 	}
 	
 	protected void dispatchMouseDrag(){		
@@ -247,6 +241,8 @@ public class KinectDesign extends PcDesign {
 	
 	protected void dispatchMouseRelease(){
 		fakeMouse = cursor;
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, 0, 0, thisX, thisY, 1, true);
+		dispatchEvent(e);
 	}
 	
 	public static void main(String[] args){

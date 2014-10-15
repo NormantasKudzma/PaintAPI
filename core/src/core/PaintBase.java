@@ -2,10 +2,11 @@ package core;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class PaintBase {
 	public static final int DEFAULT_SIZE = 4;
@@ -15,6 +16,8 @@ public class PaintBase {
 	
 	protected Graphics2D g;
 	protected Brush brush;
+	
+	private ArrayList<Point> q;
 	
 	public PaintBase(){
 		brush = new Brush();
@@ -111,23 +114,52 @@ public class PaintBase {
 		setBrushSize(brush.getSize());
 		setCustomStroke(brush.getCustomStroke());
 	}
+
+	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w){
+		fill(x, y, oldClr, newClr, img, w, 0);
+	}
+	// 4-Way flood fill using queue. Run this on a thread to reduce impact on performance
+	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w, int treshold){	
+		int h = img.length / w - 1;
+		if (x <0 || y < 0 || x > w || y > h){
+			return;
+		}
+		int pixel = img[x + y * w];
+		if (pixel == newClr || pixel != oldClr){
+			return;
+		}
+		
+		q = new ArrayList<Point>(10000);
+		q.add(new Point(x, y));
+		while (!q.isEmpty()){
+			Point p = q.remove(q.size() - 1);
+			img[p.x + p.y * w] = newClr;
+			// LEFT
+			if (p.x != 0 && img[p.x - 1 + p.y * w] != newClr && alphaTreshold(img[p.x - 1 + p.y * w], oldClr, treshold)) q.add(new Point(p.x - 1, p.y));
+			// RIGHT		
+			if (p.x != w-1 && img[p.x + 1 + p.y * w] != newClr && alphaTreshold(img[p.x + 1 + p.y * w], oldClr, treshold)) q.add(new Point(p.x + 1, p.y));
+			// UP
+			if (p.y != h && img[p.x + (p.y + 1) * w] != newClr && alphaTreshold(img[p.x + (p.y + 1) * w], oldClr, treshold)) q.add(new Point(p.x, p.y + 1));
+			// DOWN
+			if (p.y != 0 && img[p.x + (p.y - 1) * w] != newClr && alphaTreshold(img[p.x + (p.y - 1) * w], oldClr, treshold)) q.add(new Point(p.x, p.y - 1));		
+		}
+	}
 	
-	public void fill(int x, int y, Color target, BufferedImage img){
-		if (x <0 || y < 0 || x > img.getWidth() || y > img.getHeight()){
-			return;
-		}
-		if (img.getRGB(x, y) == target.getRGB()){
-			return;
-		}
-		fill(x - 1, y, target, img);
-		fill(x + 1, y, target, img);
+	public boolean alphaTreshold(int newClr, int oldClr, int treshold){
+		int mr = 0x00ff0000, mg = 0x0000ff00, mb = 0x000000ff;
+		int or, og, ob, nr, ng, nb;
+		or = oldClr & mr >>> 16;
+		og = oldClr & mg >>> 8;
+		ob = oldClr & mb;
+		nr = newClr & mr >>> 16;
+		ng = newClr & mg >>> 8;
+		nb = newClr & mb;
 		
-		fill(x, y - 1, target, img);
-		fill(x, y + 1, target, img);
-		
-		fill(x + 1, y + 1, target, img);
-		fill(x + 1, y - 1, target, img);
-		fill(x - 1, y + 1, target, img);
-		fill(x - 1, y - 1, target, img);
+		if (or > nr + treshold || or < nr - treshold ||
+			og > ng + treshold || og < ng - treshold ||
+			ob > nb + treshold || ob < nb - treshold){
+			return false;
+		}
+		return true;
 	}
 }

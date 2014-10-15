@@ -11,10 +11,11 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -23,7 +24,6 @@ import java.util.Locale;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -37,6 +37,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -46,6 +48,7 @@ import core.Filters;
 import core.LightweightMouseListener;
 import core.PaintBase;
 import core.RectShape;
+import core.Stack;
 import core.StarShape;
 import core.TriangleShape;
 
@@ -97,6 +100,7 @@ public class PcDesign extends JFrame{
 	protected int lastX = 0;
 	protected int lastY = 0;
 	
+	protected Stack<BufferedImage> undoHistory;
 	private String tool = "basic";
 	
 	public PcDesign(){
@@ -108,6 +112,7 @@ public class PcDesign extends JFrame{
 		paint = new PaintBase();
 		initDrawPanel(imgW, imgH);
 		createNewImage(imgW, imgH);
+		undoHistory = new Stack<BufferedImage>();
 	}
 	
 	protected void initFrame(int w, int h){
@@ -163,14 +168,34 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				switch(tool){
-				case "strline":
-					paint.drawCenteredLine(lastX, lastY, e.getX(), e.getY());
+					case "strline":
+						paint.drawCenteredLine(lastX, lastY, e.getX(), e.getY());
+						break;
 				}
 				drawPanel.repaint();
 			}
 			
 			@Override
-			public void mousePressed(MouseEvent e) {			
+			public void mousePressed(MouseEvent e) {
+				BufferedImage img = CloneImage();
+				undoHistory.push(img);
+				if (tool.equals("bucket")){					
+					final int x = e.getX(), y = e.getY();				
+					final int w = drawing.getWidth(), h = drawing.getHeight();
+					int [] arr = new int[w * h];
+					arr = drawing.getRGB(0, 0, w, h, arr, 0, w);
+					final int arrr [] = arr;
+					
+					new Thread(new Runnable(){
+						@Override
+						public void run() {
+							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 128);
+							drawing.setRGB(0, 0, w, h, arrr, 0, w);
+							drawPanel.repaint();
+						}
+					}).start();
+					return;
+				}
 				lastX = e.getX();
 				lastY = e.getY();
 				mouseClicked(e);
@@ -188,10 +213,12 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(tool == "basic")
+				if(tool.equals("basic")){
 					paint.drawCenteredPixel(e.getX(), e.getY());
+				}
 				drawPanel.repaint();
 			}
+
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
 			@Override
@@ -199,21 +226,22 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				switch(tool){
-				case "basic":
-					int x = e.getX(), y = e.getY();
-					float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
-					float treshold = paint.getBrushSize() * 0.15f;
-					if (dist > treshold){
-						paint.drawCenteredLine(lastX, lastY, x, y);
-
-					}
-					else {
-						paint.drawCenteredPixel(lastX, lastY);
-					}
-					lastX = x;
-					lastY = y;
-					drawPanel.repaint();				
+				switch(tool) {
+					case "basic":
+						int x = e.getX(), y = e.getY();
+						float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
+						float treshold = paint.getBrushSize() * 0.15f;
+						if (dist > treshold){
+							paint.drawCenteredLine(lastX, lastY, x, y);
+	
+						}
+						else {
+							paint.drawCenteredPixel(lastX, lastY);
+						}
+						lastX = x;
+						lastY = y;
+						drawPanel.repaint();
+						break;
 				}				
 			}
 		});
@@ -270,9 +298,20 @@ public class PcDesign extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {				
 				try {
-					JComboBox<Integer> c = (JComboBox) e.getSource();
-					int size = (Integer)c.getSelectedItem();
-					updateBrush(size);
+					JComboBox<Integer> c = (JComboBox) e.getSource();	
+					String Size = "" + c.getSelectedItem();
+					int size = 0;
+					try{	
+						size = Integer.parseInt(Size);
+						if (size > 0){
+							updateBrush(size);
+							return;
+						}
+					}
+					catch(NumberFormatException er){ 	
+					}
+					c.getEditor().setItem(paint.getBrushSize());
+						
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -291,8 +330,17 @@ public class PcDesign extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JComboBox<Integer> c = (JComboBox) e.getSource();
-					double r = (Double)c.getSelectedItem();
-					updateBrush(r);
+					String Rotat = "" + c.getSelectedItem();
+					
+					try{ 
+						 double i = Double.parseDouble(Rotat);
+						 double r = (Double)c.getSelectedItem();
+						 updateBrush(r);
+					   }
+					catch(NumberFormatException er){ 
+						c.getEditor().setItem(paint.getBrushRotation());
+					}
+					
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -550,30 +598,6 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
-		
-		JMenu help = new JMenu("Help..");
-		menuBar.add(help);
-		
-		JMenuItem howto = new JMenuItem("How to use paint");
-		howto.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
-		help.add(howto);
-		
-		JMenuItem about = new JMenuItem("About");
-		about.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(PcDesign.this, new JLabel("Kas nors užpildys vėliau"));
-			}
-		});
-		help.add(about);
 
 		JMenu tools = new JMenu("Tools..");
 		menuBar.add(tools);
@@ -606,6 +630,47 @@ public class PcDesign extends JFrame{
 			}
 		});
 		tools.add(bucket);
+		
+		
+		JMenuItem undo = new JMenuItem("Undo");
+		undo.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				BufferedImage img = undoHistory.pop();
+				if(img != null){
+					initDrawPanel(img.getWidth(), img.getHeight());
+					createImageFrom(img);
+				}
+			}
+		});
+		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
+        undo.setAccelerator(ctrlZ);
+		edit.add(undo);        
+		
+		JMenu help = new JMenu("Help..");
+		menuBar.add(help);
+		
+		JMenuItem howto = new JMenuItem("How to use paint");
+		howto.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		help.add(howto);
+		
+		JMenuItem about = new JMenuItem("About");
+		about.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(PcDesign.this, new JLabel("Kas nors užpildys vėliau"));
+			}
+		});
+		help.add(about);
 	}
 	
 	public void createImageFrom(BufferedImage b){
@@ -622,6 +687,7 @@ public class PcDesign extends JFrame{
 		imgW = w;
 		imgH = h;
 		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
+		drawing.getGraphics().fillRect(0, 0, w, h);
 		if (paint != null){
 			paint.setGraphics((Graphics2D) drawing.getGraphics());
 		}
@@ -658,6 +724,7 @@ public class PcDesign extends JFrame{
 			int h = Integer.parseInt(y.getText());
 			if (w < 0 || h < 0){
 				// Invalid size, throw error?
+				result = JOptionPane.showConfirmDialog(null, p, "Create new image", JOptionPane.OK_CANCEL_OPTION);
 				return;
 			}
 			w = w > maxImgW ? maxImgW : w;
@@ -673,6 +740,13 @@ public class PcDesign extends JFrame{
 		return result;
 	}
 	
+	public BufferedImage CloneImage(){
+		 ColorModel cm = drawing.getColorModel();
+		 boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+		 WritableRaster raster = drawing.copyData(null);
+		 return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+	}
+
 	public static void main(String [] args){
 		new PcDesign();
 	}
