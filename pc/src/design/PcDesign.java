@@ -189,7 +189,7 @@ public class PcDesign extends JFrame{
 							drawing.setRGB(0, 0, w, h, arrr, 0, w);
 							drawPanel.repaint();
 						}
-					}).start();					
+					}).start();
 					return;
 				}
 				lastX = e.getX();

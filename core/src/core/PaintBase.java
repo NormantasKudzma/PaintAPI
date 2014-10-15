@@ -160,14 +160,6 @@ public class PaintBase {
 			ob > nb + treshold || ob < nb - treshold){
 			return false;
 		}
-		
-//		newClr = newClr >>> 24;
-//		oldClr = oldClr >>> 24;
-//		int upper = newClr + treshold;
-//		int lower = newClr - treshold;
-//		if (oldClr < lower || oldClr > upper){
-//			return false;
-//		}	
 		return true;
 	}
 }
