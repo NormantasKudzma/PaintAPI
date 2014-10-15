@@ -11,20 +11,19 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.regex.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -47,6 +46,7 @@ import core.Filters;
 import core.LightweightMouseListener;
 import core.PaintBase;
 import core.RectShape;
+import core.Stack;
 import core.StarShape;
 import core.TriangleShape;
 
@@ -98,6 +98,8 @@ public class PcDesign extends JFrame{
 	protected int lastX = 0;
 	protected int lastY = 0;
 	
+	protected Stack<BufferedImage> undoHistory;
+	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
 	}
@@ -107,6 +109,8 @@ public class PcDesign extends JFrame{
 		paint = new PaintBase();
 		initDrawPanel(imgW, imgH);
 		createNewImage(imgW, imgH);
+		undoHistory = new Stack<BufferedImage>();
+		undoHistory.push(CloneImage());	
 	}
 	
 	protected void initFrame(int w, int h){
@@ -179,6 +183,11 @@ public class PcDesign extends JFrame{
 			public void mouseClicked(MouseEvent e) {
 				paint.drawCenteredPixel(e.getX(), e.getY());
 				drawPanel.repaint();
+			}
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				 BufferedImage img = CloneImage();
+				 undoHistory.push(img);
 			}
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
@@ -537,6 +546,25 @@ public class PcDesign extends JFrame{
 		});
 		edit.add(moreclrs);
 		
+		JMenuItem undo = new JMenuItem("Undo");
+		undo.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				BufferedImage img = undoHistory.pop();
+				if(img != null){
+					initDrawPanel(img.getWidth(), img.getHeight());
+					createImageFrom(img);
+				}
+				else
+					System.out.println("Tuðèias");
+			}
+		});
+		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
+        undo.setAccelerator(ctrlZ);
+		edit.add(undo);
+        
+		
 		JMenu help = new JMenu("Help..");
 		menuBar.add(help);
 		
@@ -626,6 +654,13 @@ public class PcDesign extends JFrame{
 		JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to continue?");
 		int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
 		return result;
+	}
+	
+	public BufferedImage CloneImage(){
+		 ColorModel cm = drawing.getColorModel();
+		 boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+		 WritableRaster raster = drawing.copyData(null);
+		 return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
 	}
 
 	public static void main(String [] args){
