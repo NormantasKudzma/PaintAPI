@@ -88,7 +88,7 @@ public class PcDesign extends JFrame{
     protected File filetoload;
     protected Filters f = new Filters();
 	protected PaintBase paint;
-	public static BufferedImage drawing;
+	protected BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
 	
@@ -645,8 +645,7 @@ public class PcDesign extends JFrame{
 		});
 		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
         undo.setAccelerator(ctrlZ);
-		edit.add(undo);
-        
+		edit.add(undo);        
 		
 		JMenu help = new JMenu("Help..");
 		menuBar.add(help);
@@ -687,6 +686,7 @@ public class PcDesign extends JFrame{
 		imgW = w;
 		imgH = h;
 		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
+		drawing.getGraphics().fillRect(0, 0, w, h);
 		if (paint != null){
 			paint.setGraphics((Graphics2D) drawing.getGraphics());
 		}
