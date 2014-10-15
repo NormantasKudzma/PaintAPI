@@ -37,6 +37,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -86,7 +88,7 @@ public class PcDesign extends JFrame{
     protected File filetoload;
     protected Filters f = new Filters();
 	protected PaintBase paint;
-	protected BufferedImage drawing;
+	public static BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
 	
@@ -99,6 +101,7 @@ public class PcDesign extends JFrame{
 	protected int lastY = 0;
 	
 	protected Stack<BufferedImage> undoHistory;
+	private String tool = "basic";
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -110,7 +113,6 @@ public class PcDesign extends JFrame{
 		initDrawPanel(imgW, imgH);
 		createNewImage(imgW, imgH);
 		undoHistory = new Stack<BufferedImage>();
-		undoHistory.push(CloneImage());	
 	}
 	
 	protected void initFrame(int w, int h){
@@ -160,13 +162,44 @@ public class PcDesign extends JFrame{
 		};		
 		drawPanel.setPreferredSize(new Dimension(imgW, imgH));
 		drawPanel.setBackground(Color.white);
+
 		drawPanel.addMouseListener(new LightweightMouseListener() {
 			
 			@Override
-			public void mousePressed(MouseEvent e) {			
+			public void mouseReleased(MouseEvent e) {
+				switch(tool){
+					case "strline":
+						paint.drawCenteredLine(lastX, lastY, e.getX(), e.getY());
+						break;
+				}
+				drawPanel.repaint();
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (tool.equals("bucket")){					
+					final int x = e.getX(), y = e.getY();					
+					int [] arr = new int[drawing.getWidth() * drawing.getHeight()];
+					arr = drawing.getRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arr, 0, drawing.getWidth());
+					final int arrr [] = arr;
+					
+					new Thread(new Runnable(){
+						@Override
+						public void run() {
+							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, drawing.getWidth());
+							drawing.setRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arrr, 0, drawing.getWidth());
+							drawPanel.repaint();
+						}
+					}).start();					
+					return;
+				}
 				lastX = e.getX();
 				lastY = e.getY();
+				BufferedImage img = CloneImage();
+				undoHistory.push(img);
 				mouseClicked(e);
+				
+				
 			}
 			
 			@Override
@@ -181,14 +214,12 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				paint.drawCenteredPixel(e.getX(), e.getY());
+				if(tool.equals("basic")){
+					paint.drawCenteredPixel(e.getX(), e.getY());
+				}
 				drawPanel.repaint();
 			}
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				 BufferedImage img = CloneImage();
-				 undoHistory.push(img);
-			}
+
 		});
 		drawPanel.addMouseMotionListener(new MouseMotionListener() {
 			@Override
@@ -196,23 +227,27 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				int x = e.getX(), y = e.getY();
-				float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
-				float treshold = paint.getBrushSize() * 0.15f;
-				if (dist > treshold){
-					paint.drawCenteredLine(lastX, lastY, x, y);
-				}
-				else {
-					paint.drawCenteredPixel(lastX, lastY);
-				}
-				lastX = x;
-				lastY = y;
-				drawPanel.repaint();
+				switch(tool) {
+					case "basic":
+						int x = e.getX(), y = e.getY();
+						float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
+						float treshold = paint.getBrushSize() * 0.15f;
+						if (dist > treshold){
+							paint.drawCenteredLine(lastX, lastY, x, y);
+	
+						}
+						else {
+							paint.drawCenteredPixel(lastX, lastY);
+						}
+						lastX = x;
+						lastY = y;
+						drawPanel.repaint();
+						break;
+				}				
 			}
 		});
 		drawContainerPanel.add(drawPanel, BorderLayout.CENTER);
-		drawContainerPanel.revalidate();
-				
+		drawContainerPanel.revalidate();				
 		drawContainerPanel.repaint();
 	}
 	
@@ -459,6 +494,20 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				Object[] options = {"Local device", "Google drive", "Cancel"};
+				JLabel warning = new JLabel("Save to:");
+				int result = JOptionPane.showOptionDialog(null, warning, "Select where to save",
+						JOptionPane.YES_NO_CANCEL_OPTION,
+					    JOptionPane.QUESTION_MESSAGE,
+					    null,
+					    options,
+					    options[2]);
+				
+				if (result == JOptionPane.CANCEL_OPTION){
+					return;
+				}
+				
+				if (result == JOptionPane.YES_OPTION){
 				JFileChooser c = new JFileChooser(){
                                     
                                     // Confirmation box if file with the same name already exists
@@ -516,6 +565,11 @@ public class PcDesign extends JFrame{
                                         y.printStackTrace();
                                     }
                                 }
+				}
+				
+				if (result == JOptionPane.NO_OPTION){
+					return;
+				}
 			}
 		});
 		KeyStroke ctrlS = KeyStroke.getKeyStroke("control S");
@@ -545,6 +599,39 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
+
+		JMenu tools = new JMenu("Tools..");
+		menuBar.add(tools);
+		
+		JMenuItem basic = new JMenuItem("Basic");
+		basic.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e){
+				tool = "basic";
+			}
+		});
+		tools.add(basic);
+		
+		JMenuItem strline = new JMenuItem("Straight line");
+		strline.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e){
+				tool = "strline";
+			}
+		});
+		tools.add(strline);
+
+		JMenuItem bucket = new JMenuItem("Bucket tool");
+		bucket.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tool = "bucket";
+			}
+		});
+		tools.add(bucket);
+		
 		
 		JMenuItem undo = new JMenuItem("Undo");
 		undo.addActionListener(new ActionListener(){

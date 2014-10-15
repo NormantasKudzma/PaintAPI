@@ -2,9 +2,11 @@ package core;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
 public class PaintBase {
 	public static final int DEFAULT_SIZE = 4;
@@ -14,6 +16,8 @@ public class PaintBase {
 	
 	protected Graphics2D g;
 	protected Brush brush;
+	
+	private ArrayList<Point> q;
 	
 	public PaintBase(){
 		brush = new Brush();
@@ -102,12 +106,37 @@ public class PaintBase {
 	}
 	
 	public void setGraphics(Graphics2D g){
+		// Turned off antialiasing, since bucket has no filling treshold
 		this.g = g;
-		RenderingHints r = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-				  RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setRenderingHints(r);
 		setBrushColor(brush.getColor());
 		setBrushSize(brush.getSize());
 		setCustomStroke(brush.getCustomStroke());
+	}
+
+	// 4-Way flood fill using queue. Run this on a thread to reduce impact on performance
+	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w){	
+		int h = img.length / w - 1;
+		if (x <0 || y < 0 || x > w || y > h){
+			return;
+		}
+		int pixel = img[x + y * w];
+		if (pixel == newClr || pixel != oldClr){
+			return;
+		}
+		
+		q = new ArrayList<Point>(10000);
+		q.add(new Point(x, y));
+		while (!q.isEmpty()){
+			Point p = q.remove(q.size() - 1);
+			img[p.x + p.y * w] = newClr;
+			// LEFT
+			if (p.x != 0 && img[p.x - 1 + p.y * w] != newClr && img[p.x - 1 + p.y * w] == oldClr) q.add(new Point(p.x - 1, p.y));
+			// RIGHT		
+			if (p.x != w-1 && img[p.x + 1 + p.y * w] != newClr && img[p.x + 1 + p.y * w] == oldClr) q.add(new Point(p.x + 1, p.y));
+			// UP
+			if (p.y != h && img[p.x + (p.y + 1) * w] != newClr && img[p.x + (p.y + 1) * w] == oldClr) q.add(new Point(p.x, p.y + 1));
+			// DOWN
+			if (p.y != 0 && img[p.x + (p.y - 1) * w] != newClr && img[p.x + (p.y - 1) * w] == oldClr) q.add(new Point(p.x, p.y - 1));		
+		}
 	}
 }
