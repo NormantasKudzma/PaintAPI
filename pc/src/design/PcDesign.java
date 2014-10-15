@@ -20,6 +20,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.regex.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -293,9 +294,20 @@ public class PcDesign extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {				
 				try {
-					JComboBox<Integer> c = (JComboBox) e.getSource();
-					int size = (Integer)c.getSelectedItem();
-					updateBrush(size);
+					JComboBox<Integer> c = (JComboBox) e.getSource();	
+					String Size = "" + c.getSelectedItem();
+					int size = 0;
+					try{	
+						size = Integer.parseInt(Size);
+						if (size > 0){
+							updateBrush(size);
+							return;
+						}
+					}
+					catch(NumberFormatException er){ 	
+					}
+					c.getEditor().setItem(paint.getBrushSize());
+						
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -314,8 +326,17 @@ public class PcDesign extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JComboBox<Integer> c = (JComboBox) e.getSource();
-					double r = (Double)c.getSelectedItem();
-					updateBrush(r);
+					String Rotat = "" + c.getSelectedItem();
+					
+					try{ 
+						 double i = Double.parseDouble(Rotat);
+						 double r = (Double)c.getSelectedItem();
+						 updateBrush(r);
+					   }
+					catch(NumberFormatException er){ 
+						c.getEditor().setItem(paint.getBrushRotation());
+					}
+					
 				}
 				catch (Exception ex){
 					ex.printStackTrace();
@@ -683,6 +704,7 @@ public class PcDesign extends JFrame{
 			int h = Integer.parseInt(y.getText());
 			if (w < 0 || h < 0){
 				// Invalid size, throw error?
+				result = JOptionPane.showConfirmDialog(null, p, "Create new image", JOptionPane.OK_CANCEL_OPTION);
 				return;
 			}
 			w = w > maxImgW ? maxImgW : w;
@@ -697,7 +719,7 @@ public class PcDesign extends JFrame{
 		int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
 		return result;
 	}
-	
+
 	public static void main(String [] args){
 		new PcDesign();
 	}
