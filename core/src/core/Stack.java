@@ -2,7 +2,7 @@ package core;
 
 public class Stack <T extends Object> {
 
-	private static int stackSize = 7;
+	private static int stackSize = 15;
 	private T []stack = null; 
 
 	public Stack(){

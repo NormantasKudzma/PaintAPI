@@ -88,7 +88,7 @@ public class PcDesign extends JFrame{
     protected File filetoload;
     protected Filters f = new Filters();
 	protected PaintBase paint;
-	protected BufferedImage drawing;
+	public static BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
 	
@@ -177,19 +177,19 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
+				BufferedImage img = CloneImage();
+				undoHistory.push(img);
 				if (tool.equals("bucket")){					
-					final int x = e.getX(), y = e.getY();	
-					final int w = drawing.getWidth(), h = drawing.getHeight();
-					int [] arr = new int[w * h];
-					arr = drawing.getRGB(0, 0,w, h, arr, 0, w);
+					final int x = e.getX(), y = e.getY();					
+					int [] arr = new int[drawing.getWidth() * drawing.getHeight()];
+					arr = drawing.getRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arr, 0, drawing.getWidth());
 					final int arrr [] = arr;
-
+					
 					new Thread(new Runnable(){
 						@Override
 						public void run() {
-							// FILL SHAPE WITH TOLERANCE OF 0xF
-							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 32);
-							drawing.setRGB(0, 0, w, h, arrr, 0, w);
+							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, drawing.getWidth());
+							drawing.setRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arrr, 0, drawing.getWidth());
 							drawPanel.repaint();
 						}
 					}).start();					
@@ -197,11 +197,7 @@ public class PcDesign extends JFrame{
 				}
 				lastX = e.getX();
 				lastY = e.getY();
-				BufferedImage img = CloneImage();
-				undoHistory.push(img);
 				mouseClicked(e);
-				
-				
 			}
 			
 			@Override
@@ -645,8 +641,6 @@ public class PcDesign extends JFrame{
 					initDrawPanel(img.getWidth(), img.getHeight());
 					createImageFrom(img);
 				}
-				else
-					System.out.println("Tuðèias");
 			}
 		});
 		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
@@ -693,7 +687,6 @@ public class PcDesign extends JFrame{
 		imgW = w;
 		imgH = h;
 		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
-		drawing.getGraphics().fillRect(0, 0, w, h);
 		if (paint != null){
 			paint.setGraphics((Graphics2D) drawing.getGraphics());
 		}
