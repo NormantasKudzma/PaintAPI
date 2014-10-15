@@ -106,15 +106,20 @@ public class PaintBase {
 	}
 	
 	public void setGraphics(Graphics2D g){
-		// Turned off antialiasing, since bucket has no filling treshold
 		this.g = g;
+		RenderingHints r = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+				  RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHints(r);
 		setBrushColor(brush.getColor());
 		setBrushSize(brush.getSize());
 		setCustomStroke(brush.getCustomStroke());
 	}
 
+	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w){
+		fill(x, y, oldClr, newClr, img, w, 0);
+	}
 	// 4-Way flood fill using queue. Run this on a thread to reduce impact on performance
-	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w){	
+	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w, int treshold){	
 		int h = img.length / w - 1;
 		if (x <0 || y < 0 || x > w || y > h){
 			return;
@@ -130,13 +135,39 @@ public class PaintBase {
 			Point p = q.remove(q.size() - 1);
 			img[p.x + p.y * w] = newClr;
 			// LEFT
-			if (p.x != 0 && img[p.x - 1 + p.y * w] != newClr && img[p.x - 1 + p.y * w] == oldClr) q.add(new Point(p.x - 1, p.y));
+			if (p.x != 0 && img[p.x - 1 + p.y * w] != newClr && alphaTreshold(img[p.x - 1 + p.y * w], oldClr, treshold)) q.add(new Point(p.x - 1, p.y));
 			// RIGHT		
-			if (p.x != w-1 && img[p.x + 1 + p.y * w] != newClr && img[p.x + 1 + p.y * w] == oldClr) q.add(new Point(p.x + 1, p.y));
+			if (p.x != w-1 && img[p.x + 1 + p.y * w] != newClr && alphaTreshold(img[p.x + 1 + p.y * w], oldClr, treshold)) q.add(new Point(p.x + 1, p.y));
 			// UP
-			if (p.y != h && img[p.x + (p.y + 1) * w] != newClr && img[p.x + (p.y + 1) * w] == oldClr) q.add(new Point(p.x, p.y + 1));
+			if (p.y != h && img[p.x + (p.y + 1) * w] != newClr && alphaTreshold(img[p.x + (p.y + 1) * w], oldClr, treshold)) q.add(new Point(p.x, p.y + 1));
 			// DOWN
-			if (p.y != 0 && img[p.x + (p.y - 1) * w] != newClr && img[p.x + (p.y - 1) * w] == oldClr) q.add(new Point(p.x, p.y - 1));		
+			if (p.y != 0 && img[p.x + (p.y - 1) * w] != newClr && alphaTreshold(img[p.x + (p.y - 1) * w], oldClr, treshold)) q.add(new Point(p.x, p.y - 1));		
 		}
+	}
+	
+	public boolean alphaTreshold(int newClr, int oldClr, int treshold){
+		int mr = 0x00ff0000, mg = 0x0000ff00, mb = 0x000000ff;
+		int or, og, ob, nr, ng, nb;
+		or = oldClr & mr >>> 16;
+		og = oldClr & mg >>> 8;
+		ob = oldClr & mb;
+		nr = newClr & mr >>> 16;
+		ng = newClr & mg >>> 8;
+		nb = newClr & mb;
+		
+		if (or > nr + treshold || or < nr - treshold ||
+			og > ng + treshold || og < ng - treshold ||
+			ob > nb + treshold || ob < nb - treshold){
+			return false;
+		}
+		
+//		newClr = newClr >>> 24;
+//		oldClr = oldClr >>> 24;
+//		int upper = newClr + treshold;
+//		int lower = newClr - treshold;
+//		if (oldClr < lower || oldClr > upper){
+//			return false;
+//		}	
+		return true;
 	}
 }
