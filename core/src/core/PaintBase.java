@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 public class PaintBase {
 	public static final int DEFAULT_SIZE = 4;
@@ -109,5 +110,24 @@ public class PaintBase {
 		setBrushColor(brush.getColor());
 		setBrushSize(brush.getSize());
 		setCustomStroke(brush.getCustomStroke());
+	}
+	
+	public void fill(int x, int y, Color target, BufferedImage img){
+		if (x <0 || y < 0 || x > img.getWidth() || y > img.getHeight()){
+			return;
+		}
+		if (img.getRGB(x, y) == target.getRGB()){
+			return;
+		}
+		fill(x - 1, y, target, img);
+		fill(x + 1, y, target, img);
+		
+		fill(x, y - 1, target, img);
+		fill(x, y + 1, target, img);
+		
+		fill(x + 1, y + 1, target, img);
+		fill(x + 1, y - 1, target, img);
+		fill(x - 1, y + 1, target, img);
+		fill(x - 1, y - 1, target, img);
 	}
 }

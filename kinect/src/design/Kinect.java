@@ -26,9 +26,10 @@ public class Kinect extends J4KSDK {
 	double [] x = {trend[0][0], trend[1][0], trend[2][0], trend[3][0], trend[4][0], trend[5][0],
 			   trend[6][0]/*, trend[7][0], trend[8][0], trend[9][0], trend[10][0], trend[11][0], trend[12][0]*/};
 	double [] y = {trend[0][1], trend[1][1], trend[2][1], trend[3][1], trend[4][1], trend[5][1],
-		trend[6][1]/*, trend[7][1], trend[8][1], trend[9][1], trend[10][1], trend[11][1], trend[12][1]*/};
+			   trend[6][1]/*, trend[7][1], trend[8][1], trend[9][1], trend[10][1], trend[11][1], trend[12][1]*/};
 	double xmed = 0;
 	double ymed = 0;
+	int frame = 0;
 	
 	public Kinect(){
 		super();
@@ -56,15 +57,21 @@ public class Kinect extends J4KSDK {
 			}
 			videoPanel.skeletons[i] = s;
 		}
+		frame = frame == 0 ? frame++ : frame;
 	}
 
 	private void trackSkeleton(double [] drawHand, double [] controlHand) {
 		// Fake mouse controls
 		xmed = median(x);
-		ymed = median(y);	
-		drawHand = jitterSmoothing(drawHand);
-//		drawHand = medianSmoothing(drawHand);
-		drawHand = doubleAverageSmoothing(drawHand);
+		ymed = median(y);
+		if (frame > 6){
+			drawHand = exponentialSmoothing(drawHand);
+			//drawHand = jitterSmoothing(drawHand);
+			//drawHand = medianSmoothing(drawHand);
+			drawHand = doubleAverageSmoothing(drawHand);
+		}
+
+
 		
 		trend = matrixPush(trend);
 		trend[0] = drawHand;
@@ -135,6 +142,25 @@ public class Kinect extends J4KSDK {
 			return true;
 		}
 		return false;
+	}
+	
+	private double[] exponentialSmoothing(double [] matrix){
+		// Exponential smoothing
+		// Xn = a * sum-i=0->n[ (1-a)^i * X(n-i) ]
+		// N = 7 ; a = 0.35;
+		double a = 0.35;
+		double invA = 1 - a;
+		int n = 6;
+		double sumX = 0;
+		double sumY = 0;
+		for (int i = 0; i < n; i++){
+			sumX += Math.pow(invA, i) * trend[n - i][0];
+			sumY += Math.pow(invA, i) * trend[n - i][1];
+		}
+		matrix[0] = a * sumX;
+		matrix[1] = a * sumY;
+		
+		return matrix;
 	}
 	
 	private double[] medianSmoothing(double [] matrix){
