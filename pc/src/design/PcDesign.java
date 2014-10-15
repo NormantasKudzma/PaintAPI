@@ -192,7 +192,7 @@ public class PcDesign extends JFrame{
 							drawing.setRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arrr, 0, drawing.getWidth());
 							drawPanel.repaint();
 						}
-					}).start();					
+					}).start();
 					return;
 				}
 				lastX = e.getX();
