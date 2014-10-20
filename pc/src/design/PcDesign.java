@@ -1,5 +1,6 @@
 package design;
 
+import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -8,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -37,8 +39,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -83,6 +83,10 @@ public class PcDesign extends JFrame{
 	protected JPanel drawContainerPanel;
 	protected JPanel drawPanel;
 	protected JPanel topPanel;
+	
+	protected JPanel glass;
+	protected PaintBase glassPaint;
+	protected BufferedImage glassImage;
         
     protected File filetosave;
     protected File filetoload;
@@ -99,6 +103,8 @@ public class PcDesign extends JFrame{
 	
 	protected int lastX = 0;
 	protected int lastY = 0;
+	protected int thisX = 0;
+	protected int thisY = 0;
 	
 	protected Stack<BufferedImage> undoHistory;
 	private String tool = "basic";
@@ -110,11 +116,48 @@ public class PcDesign extends JFrame{
 	public PcDesign(int frameW, int frameH){
 		initFrame(frameW, frameH);
 		paint = new PaintBase();
+		initGlassPanel();
 		initDrawPanel(imgW, imgH);
 		createNewImage(imgW, imgH);
 		undoHistory = new Stack<BufferedImage>();
 	}
 	
+	protected void initGlassPanel(){
+		glass = new JPanel(){
+			protected void paintComponent(Graphics g) {				
+				super.paintComponent(g);
+				g.drawImage(glassImage, 0, 0, null);
+			};
+		};
+
+		glassImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_ARGB);
+		this.setGlassPane(glass);
+		glass.setVisible(true);
+		glass.setOpaque(false);
+		glass.repaint();
+		glassPaint = new PaintBase((Graphics2D) glassImage.getGraphics());
+	}
+	
+	protected void drawLineToolLine(int x1, int y1, int x2, int y2) {		
+		Rectangle r = drawContainerPanel.getBounds();
+		Rectangle rr = drawPanel.getBounds();
+		Rectangle rrr = getJMenuBar().getBounds();
+		int x = r.x + rr.x;
+		int y = r.y + rr.y + rrr.height;
+		x1 += x;
+		x2 += x;
+		y1 += y;
+		y2 += y;		
+		
+		glassPaint.getGraphics().setComposite(AlphaComposite.Clear);
+		glassPaint.setBrushColor(new Color(0, true));
+		glassPaint.getGraphics().fillRect(0, 0, frameWidth, frameHeight);
+
+		glassPaint.getGraphics().setComposite(AlphaComposite.SrcOver);
+		glassPaint.setBrush(paint.getBrush());
+		glassPaint.drawCenteredLine(x1, y1, x2, y2);
+	}
+
 	protected void initFrame(int w, int h){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(w, h);
@@ -170,18 +213,18 @@ public class PcDesign extends JFrame{
 				switch(tool){
 					case "strline":
 						paint.drawCenteredLine(lastX, lastY, e.getX(), e.getY());
+						drawLineToolLine(-1, -1, -1, -1);
 						break;
 				}
-				drawPanel.repaint();
+				repaint();
 			}
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
-				BufferedImage img = CloneImage();
+				BufferedImage img = cloneImage();
 				undoHistory.push(img);
-				
-				if (tool.equals("bucket")){					
-					final int x = e.getX(), y = e.getY();				
+				final int x = e.getX(), y = e.getY();	
+				if (tool.equals("bucket")){													
 					final int w = drawing.getWidth(), h = drawing.getHeight();
 					int [] arr = new int[w * h];
 					arr = drawing.getRGB(0, 0, w, h, arr, 0, w);
@@ -190,15 +233,17 @@ public class PcDesign extends JFrame{
 					new Thread(new Runnable(){
 						@Override
 						public void run() {
-							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 128);
+							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 0);
 							drawing.setRGB(0, 0, w, h, arrr, 0, w);
 							drawPanel.repaint();
 						}
 					}).start();
 					return;
 				}
-				lastX = e.getX();
-				lastY = e.getY();
+				lastX = x;
+				lastY = y;
+				thisX = x;
+				thisY = y;
 				mouseClicked(e);
 			}
 			
@@ -227,24 +272,28 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
+				int x = e.getX(), y = e.getY();
 				switch(tool) {
-					case "basic":{
-						int x = e.getX(), y = e.getY();
-						float dist = (Math.abs(x - lastX) + Math.abs(y - lastY)) / 2f;
+					case "basic":{						
+						float dist = (Math.abs(x - thisX) + Math.abs(y - thisY)) / 2f;
 						float treshold = paint.getBrushSize() * 0.15f;
 						if (dist > treshold){
-							paint.drawCenteredLine(lastX, lastY, x, y);
-	
+							paint.drawCenteredLine(thisX, thisY, x, y);	
 						}
 						else {
-							paint.drawCenteredPixel(lastX, lastY);
+							paint.drawCenteredPixel(x, y);
 						}
-						lastX = x;
-						lastY = y;
 						drawPanel.repaint();
 						break;
 					}
-				}				
+					case "strline":{
+						drawLineToolLine(lastX, lastY, x, y);
+						glass.repaint();
+						break;
+					}
+				}
+				thisX = x;
+				thisY = y;
 			}
 		});
 		drawContainerPanel.add(drawPanel, BorderLayout.CENTER);
@@ -758,7 +807,7 @@ public class PcDesign extends JFrame{
 		return result;
 	}
 	
-	public BufferedImage CloneImage(){
+	public BufferedImage cloneImage(){
 		 ColorModel cm = drawing.getColorModel();
 		 boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
 		 WritableRaster raster = drawing.copyData(null);

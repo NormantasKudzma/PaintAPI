@@ -98,7 +98,10 @@ public class PaintBase {
 	}
 	
 	public void setBrush(Brush brush){
-		this.brush = brush;
+		setBrushColor(brush.getColor());
+		setBrushRotation(brush.getRotation());
+		setBrushSize(brush.getSize());
+		setCustomStroke(brush.getCustomStroke());
 	}
 	
 	public Graphics2D getGraphics(){
@@ -161,5 +164,9 @@ public class PaintBase {
 			return false;
 		}
 		return true;
+	}
+
+	public void clearRect(int x, int y, int w, int h){
+		g.clearRect(x, y, w, h);
 	}
 }

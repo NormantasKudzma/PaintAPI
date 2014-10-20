@@ -31,7 +31,6 @@ public class KinectDesign extends PcDesign {
 	Kinect k;
 	VideoPanel videoPanel;
 	BufferedImage fakeMouse;
-	JPanel glass;
 	JPanel rightPanel;
 	private ArrayList<JMenuItem> menuItems = new ArrayList<JMenuItem>();
 	
@@ -56,7 +55,7 @@ public class KinectDesign extends PcDesign {
 		
 		setVisible(true);		// Setvisible before resizing to calculate new max sizes
 		setUpMenuBar();
-		setUpGlassPane();
+		initGlassPanel();
 		setUpPanels();
 
 		initDrawPanel(imgW, imgH);
@@ -105,7 +104,8 @@ public class KinectDesign extends PcDesign {
 		k.k = this;
 	}
 	
-	protected void setUpGlassPane(){
+	@Override
+	protected void initGlassPanel(){
 		try {
 			cursor = ImageIO.read(cl.getResource(RES_PATH + "cursor.png"));
 			cursorActive = ImageIO.read(cl.getResource(RES_PATH + "cursorActive.png")); 
