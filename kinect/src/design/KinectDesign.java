@@ -30,23 +30,24 @@ import core.LightweightMouseListener;
 public class KinectDesign extends PcDesign {	
 	Kinect k;
 	VideoPanel videoPanel;
-	BufferedImage fakeMouse;
+	BufferedImage [] fakeMouse = new BufferedImage[2];
 	JPanel rightPanel;
 	private ArrayList<JMenuItem> menuItems = new ArrayList<JMenuItem>();
 	
-	BufferedImage cursor;
-	BufferedImage cursorActive;
-	public int thisX, thisY;
+	BufferedImage [] cursor = new BufferedImage[2];
+	BufferedImage [] cursorActive = new BufferedImage[2];
+	protected int thisX[], thisY[];
 	int sidePanelWidth;		// pakeisti i ploti ir tikrint abiem pusem
 	int menuHeight = 64;	// irgi peles kontrolei svarbus
+	
 	
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
 		videoPanel = new VideoPanel();
 		cl = getClass().getClassLoader();	// Class loader must be reinstantiated (different paths)
 		
-		thisX = frameWidth / 2;
-		thisY = (int) (frameHeight *0.75);		
+		thisX[0] = frameWidth / 2;
+		thisY[0] = (int) (frameHeight *0.75);		
 		
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		
@@ -106,10 +107,14 @@ public class KinectDesign extends PcDesign {
 	
 	@Override
 	protected void initGlassPanel(){
+		super.initGlassPanel();
 		try {
-			cursor = ImageIO.read(cl.getResource(RES_PATH + "cursor.png"));
-			cursorActive = ImageIO.read(cl.getResource(RES_PATH + "cursorActive.png")); 
-			fakeMouse = cursor;
+			cursor[0] = ImageIO.read(cl.getResource(RES_PATH + "cursor1.png"));
+			cursor[1] = ImageIO.read(cl.getResource(RES_PATH + "cursor2.png"));
+			cursorActive[0] = ImageIO.read(cl.getResource(RES_PATH + "cursorActive1.png")); 
+			cursorActive[1] = ImageIO.read(cl.getResource(RES_PATH + "cursorActive2.png")); 
+			fakeMouse[0] = cursor[0];
+			fakeMouse[1] = cursor[1];
 		}
 		catch (Exception e){
 			e.printStackTrace();
@@ -117,7 +122,10 @@ public class KinectDesign extends PcDesign {
 		glass = new JPanel(){
 			protected void paintComponent(Graphics g) {
 				super.paintComponent(g);
-				g.drawImage(fakeMouse, thisX, thisY, null);
+				for (int i = 0; i < thisX.length; i++){
+					g.drawImage(fakeMouse[i], thisX[i], thisY[i], null);
+				}
+				g.drawImage(glassImage, 0, 0, null);
 			};
 		};
 		this.setGlassPane(glass);
@@ -219,30 +227,45 @@ public class KinectDesign extends PcDesign {
 		topPanel.repaint();
 	}
 	
-	protected void dispatchMouseClick(){
-		if (fakeMouse != cursorActive){
-			fakeMouse = cursorActive;
-		}
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX, thisY, 1, false);
+	protected void dispatchMouseClick(boolean mainSkeleton){
+		switchCursors(mainSkeleton, cursorActive);
+
+		int index = mainSkeleton ? 1 : 0;
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX[index], thisY[index], 1, false);
 		dispatchEvent(e);
 	}
 	
-	protected void dispatchMouseDrag(){		
-		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-			// What source?
-			MouseEvent e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_DRAGGED, 0, 0,
-					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
-			drawPanel.dispatchEvent(e);
-		}
-		if (fakeMouse != cursorActive){
-			fakeMouse = cursorActive;
-		}
+	protected void dispatchMouseDrag(boolean mainSkeleton){		
+		// DISABLED DRAG CURRENTLY
+//		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
+//			// What source?
+//			MouseEvent e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_DRAGGED, 0, 0,
+//					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
+//			drawPanel.dispatchEvent(e);
+//		}
+//		
+//		switchCursors(mainSkeleton, cursorActive);
 	}
 	
-	protected void dispatchMouseRelease(){
-		fakeMouse = cursor;
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, 0, 0, thisX, thisY, 1, true);
+	protected void dispatchMouseRelease(boolean mainSkeleton){
+		switchCursors(mainSkeleton, cursor);
+		
+		int index = mainSkeleton ? 1 : 0;
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, 0, 0, thisX[index], thisY[index], 1, true);
 		dispatchEvent(e);
+	}
+	
+	protected void switchCursors(boolean mainSkeleton, BufferedImage [] arr){
+		if (mainSkeleton){
+			if (fakeMouse[0] != arr[0]){
+				fakeMouse[0] = arr[0];
+			}
+		}
+		else {
+			if (fakeMouse[1] != arr[1]){
+				fakeMouse[1] = arr[1];
+			}
+		}
 	}
 	
 	public static void main(String[] args){

@@ -9,7 +9,6 @@ import edu.ufl.digitalworlds.j4k.Skeleton;
 public class Kinect extends J4KSDK {	
 	public static double X_TRESHOLD = 0.08;
 	public static double Y_TRESHOLD = 0.08;
-	//public static double DRAW_TRESHOLD = 0.3;	// Distance in meters
 	public static double DRAW_TRESHOLD = 1.8;	// Distance in meters
 	
 	public static int X_DELTA_TRESHOLD = 800;
@@ -20,8 +19,8 @@ public class Kinect extends J4KSDK {
 	boolean isDrawing = false;
 	int trackedJoint = Skeleton.HAND_RIGHT;
 	int controlJoint = Skeleton.HAND_LEFT;
+	
 	// Data for smoothing
-//	double [][] trend = new double[13][3];
 	double [][] trend = new double[7][3];
 	double [] x = {trend[0][0], trend[1][0], trend[2][0], trend[3][0], trend[4][0], trend[5][0],
 			   trend[6][0]/*, trend[7][0], trend[8][0], trend[9][0], trend[10][0], trend[11][0], trend[12][0]*/};
@@ -49,61 +48,52 @@ public class Kinect extends J4KSDK {
 	@Override
 	public void onSkeletonFrameEvent(float[] data, boolean[] flags) {
 		// Draw all skeletons
+		boolean firstSkeleton = true;
 		for (int i = 0; i < Kinect.NUI_SKELETON_COUNT; i++) {
 			CustomSkeleton s = CustomSkeleton.getSkeleton(i, data, flags);
-			// Currently track only one skeleton
+			
 			if (flags[i]){
-				trackSkeleton(s.get3DJoint(trackedJoint), s.get3DJoint(controlJoint));
+				trackSkeleton(s.get3DJoint(trackedJoint), s.get3DJoint(controlJoint), firstSkeleton);
+				firstSkeleton = false;
 			}
 			videoPanel.skeletons[i] = s;
 		}
-		frame = frame == 0 ? frame++ : frame;
+		if (frame <= 6){
+			frame++;
+		}
 	}
 
-	private void trackSkeleton(double [] drawHand, double [] controlHand) {
+	private void trackSkeleton(double [] drawHand, double [] controlHand, boolean first) {
+		int index = first ? 1 : 0;
+		
 		// Fake mouse controls
 		xmed = median(x);
 		ymed = median(y);
 		if (frame > 6){
 			drawHand = exponentialSmoothing(drawHand);
-			//drawHand = jitterSmoothing(drawHand);
-			//drawHand = medianSmoothing(drawHand);
 			drawHand = doubleAverageSmoothing(drawHand);
 		}
-
-
 		
 		trend = matrixPush(trend);
 		trend[0] = drawHand;
 		
-//		double dx = drawHand[0] - trend[0][0];
-//		double dy = drawHand[1] - trend[0][1];
-		
-
-			
-//		double dist = Math.sqrt(dx*dx + dy*dy);		
-//		
-//		if (dist > MAX_TRESHOLD || dist < MIN_TRESHOLD){
-//			return;
-//		}
-		
-		k.thisX = convertX(drawHand[0]);
-		k.thisY = convertY(drawHand[1]);
+		k.thisX[index] = convertX(drawHand[0]);
+		k.thisY[index] = convertY(drawHand[1]);
 		k.glass.repaint();
 
 		if (controlHand[2] < DRAW_TRESHOLD){
 			if (isDrawing){
-				k.dispatchMouseDrag();
+				k.dispatchMouseDrag(first);
 			}
 			else {
-				k.dispatchMouseClick();
+				k.dispatchMouseClick(first);
 				isDrawing = true;
 			}				
 		}
 		else {
 			if (isDrawing){
 				isDrawing = false;
-				k.dispatchMouseRelease();
+				k.dispatchMouseRelease(first);
 			}
 		}
 	}
