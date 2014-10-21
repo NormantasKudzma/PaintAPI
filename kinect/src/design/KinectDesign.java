@@ -12,14 +12,17 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
@@ -32,14 +35,12 @@ public class KinectDesign extends PcDesign {
 	VideoPanel videoPanel;
 	BufferedImage [] fakeMouse = new BufferedImage[2];
 	JPanel rightPanel;
-	private ArrayList<JMenuItem> menuItems = new ArrayList<JMenuItem>();
 	
 	BufferedImage [] cursor = new BufferedImage[2];
 	BufferedImage [] cursorActive = new BufferedImage[2];
-	protected int thisX[], thisY[];
+	protected int thisX[] = new int[2], thisY[] = new int[2];
 	int sidePanelWidth;		// pakeisti i ploti ir tikrint abiem pusem
-	int menuHeight = 64;	// irgi peles kontrolei svarbus
-	
+	int menuHeight = 68;	// irgi peles kontrolei svarbus	
 	
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
@@ -47,7 +48,9 @@ public class KinectDesign extends PcDesign {
 		cl = getClass().getClassLoader();	// Class loader must be reinstantiated (different paths)
 		
 		thisX[0] = frameWidth / 2;
-		thisY[0] = (int) (frameHeight *0.75);		
+		thisY[0] = (int) (frameHeight *0.75);
+		thisX[1] = -50;
+		thisY[1] = -50;
 		
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		
@@ -66,31 +69,100 @@ public class KinectDesign extends PcDesign {
 	}
 	
 	protected void setUpMenuBar(){
-		Border genericBorder = new LineBorder(Color.black, 1);
-		Font genericFont = new Font("Courier", Font.PLAIN, 30);
-		Dimension d = new Dimension(menuHeight * 2, menuHeight);
+		Dimension separatorDim = new Dimension(menuHeight / 2, menuHeight / 2);
 		
-		JMenuBar menubar = getJMenuBar();
-		menubar.setPreferredSize(new Dimension(frameWidth, menuHeight));
-		for (int i = 0; i < menubar.getMenuCount(); i++){
-			JMenu menu = menubar.getMenu(i);
-			menu.setBorder(genericBorder);
-			menu.setFont(genericFont);
-			menu.setPreferredSize(d);
-			for (int j = 0; j < menu.getItemCount(); j++){
-				final JMenuItem item = menu.getItem(j);
-				menuItems.add(item);
-				item.addMouseListener(new LightweightMouseListener(){
-					@Override
-					public void mousePressed(MouseEvent e) {
-						item.doClick();
-					}
-				});
-				item.setBorder(genericBorder);
-				item.setFont(genericFont);
-				item.setPreferredSize(new Dimension(item.getPreferredSize().width, d.height));
-			}
+		JToolBar toolbar = new JToolBar(JToolBar.HORIZONTAL);
+		toolbar.setFloatable(false);
+		
+		try {
+			// File handling
+			JButton newfile = new JButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "newfile.png"))));
+			newfile.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					initDrawPanel(imgW, imgH);
+					createNewImage(imgW, imgH);
+				}
+			});
+			toolbar.add(newfile);
+			
+			JButton savefile = new JButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "savefile.png"))));
+			savefile.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					// SAVE WITH GENERIC NAME
+				}
+			});
+			toolbar.add(savefile);
+			
+			JButton loadfile = new JButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "loadfile.png"))));
+			loadfile.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					// LOAD WITH GENERIC NAME
+				}
+			});
+			toolbar.add(loadfile);
+			
+			toolbar.addSeparator(separatorDim);
+			// Tools
+			ButtonGroup tools = new ButtonGroup();
+			
+			final JToggleButton pencil = new JToggleButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "pencil.png"))));
+			pencil.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					setTool(Tools.BASIC);
+					pencil.setSelected(true);
+				}
+			});
+			toolbar.add(pencil);
+			tools.add(pencil);
+			tools.setSelected(pencil.getModel(), true);
+			
+			final JToggleButton strline = new JToggleButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "strline.png"))));
+			strline.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					setTool(Tools.STRLINE);
+					strline.setSelected(true);
+				}
+			});
+			toolbar.add(strline);
+			tools.add(strline);
+			
+			final JToggleButton bucket = new JToggleButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "bucket.png"))));
+			bucket.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					setTool(Tools.BUCKET);
+					bucket.setSelected(true);
+				}
+			});
+			toolbar.add(bucket);
+			tools.add(bucket);
+			
+			toolbar.addSeparator(separatorDim);
+			// Edit functions
+			JButton undo = new JButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "undo.png"))));
+			undo.addMouseListener(new LightweightMouseListener(){
+				@Override
+				public void mousePressed(MouseEvent e) {
+					undo();
+				}
+			});
+			toolbar.add(undo);
 		}
+		catch (Exception e){
+			e.printStackTrace();
+		}	
+		
+		// Add everything to JMenuBar
+		JMenuBar menubar = getJMenuBar();		
+		menubar.setPreferredSize(new Dimension(frameWidth, menuHeight));
+		menubar.removeAll();
+		menubar.revalidate();
+		menubar.add(toolbar);
 	}
 	
 	protected void setUpKinect(){
@@ -108,13 +180,15 @@ public class KinectDesign extends PcDesign {
 	@Override
 	protected void initGlassPanel(){
 		super.initGlassPanel();
+		cursor = new BufferedImage[2];
+		cursorActive = new BufferedImage[2];
+		fakeMouse = new BufferedImage[2];
 		try {
-			cursor[0] = ImageIO.read(cl.getResource(RES_PATH + "cursor1.png"));
-			cursor[1] = ImageIO.read(cl.getResource(RES_PATH + "cursor2.png"));
-			cursorActive[0] = ImageIO.read(cl.getResource(RES_PATH + "cursorActive1.png")); 
-			cursorActive[1] = ImageIO.read(cl.getResource(RES_PATH + "cursorActive2.png")); 
-			fakeMouse[0] = cursor[0];
-			fakeMouse[1] = cursor[1];
+			for (int i = 0; i < cursor.length; i++){
+				cursor[i] = ImageIO.read(cl.getResource(RES_PATH + "cursor" + (i+1) + ".png"));
+				cursorActive[i] = ImageIO.read(cl.getResource(RES_PATH + "cursorActive" + (i+1) + ".png"));
+				fakeMouse[i] = cursor[i];
+			}
 		}
 		catch (Exception e){
 			e.printStackTrace();

@@ -67,15 +67,16 @@ public class Kinect extends J4KSDK {
 		int index = first ? 1 : 0;
 		
 		// Fake mouse controls
-		xmed = median(x);
-		ymed = median(y);
-		if (frame > 6){
-			drawHand = exponentialSmoothing(drawHand);
-			drawHand = doubleAverageSmoothing(drawHand);
-		}
-		
-		trend = matrixPush(trend);
-		trend[0] = drawHand;
+		// SMOOTHING DISABLED ATM
+//		xmed = median(x);
+//		ymed = median(y);
+//		if (frame > 6){
+//			drawHand = exponentialSmoothing(drawHand);
+//			drawHand = doubleAverageSmoothing(drawHand);
+//		}
+//		
+//		trend = matrixPush(trend);
+//		trend[0] = drawHand;
 		
 		k.thisX[index] = convertX(drawHand[0]);
 		k.thisY[index] = convertY(drawHand[1]);

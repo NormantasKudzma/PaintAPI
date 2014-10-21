@@ -107,7 +107,7 @@ public class PcDesign extends JFrame{
 	protected int thisY = 0;
 	
 	protected Stack<BufferedImage> undoHistory;
-	private String tool = "basic";
+	private Tools tool = Tools.BASIC;
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -211,7 +211,7 @@ public class PcDesign extends JFrame{
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				switch(tool){
-					case "strline":
+					case STRLINE:
 						paint.drawCenteredLine(lastX, lastY, e.getX(), e.getY());
 						drawLineToolLine(-1, -1, -1, -1);
 						break;
@@ -224,7 +224,7 @@ public class PcDesign extends JFrame{
 				BufferedImage img = cloneImage();
 				undoHistory.push(img);
 				final int x = e.getX(), y = e.getY();	
-				if (tool.equals("bucket")){													
+				if (tool.equals(Tools.BUCKET)){													
 					final int w = drawing.getWidth(), h = drawing.getHeight();
 					int [] arr = new int[w * h];
 					arr = drawing.getRGB(0, 0, w, h, arr, 0, w);
@@ -274,7 +274,7 @@ public class PcDesign extends JFrame{
 			public void mouseDragged(MouseEvent e) {
 				int x = e.getX(), y = e.getY();
 				switch(tool) {
-					case "basic":{						
+					case BASIC:{						
 						float dist = (Math.abs(x - thisX) + Math.abs(y - thisY)) / 2f;
 						float treshold = paint.getBrushSize() * 0.15f;
 						if (dist > treshold){
@@ -286,7 +286,7 @@ public class PcDesign extends JFrame{
 						drawPanel.repaint();
 						break;
 					}
-					case "strline":{
+					case STRLINE:{
 						drawLineToolLine(lastX, lastY, x, y);
 						glass.repaint();
 						break;
@@ -504,7 +504,7 @@ public class PcDesign extends JFrame{
 		loadFile.addActionListener(new ActionListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
 				int result = throwUnsavedWarning();
 				if (result == JOptionPane.NO_OPTION){
 					return;
@@ -591,15 +591,15 @@ public class PcDesign extends JFrame{
                                 
                                 // Set a default non-existing file name
                                 int x = 0;
-                                File jpg = new File("Image_" + x + ".jpg");
-                                File png = new File("Image_" + x + ".png");
-                                File def = new File("Image_" + x);
+                                File jpg = new File(c.getCurrentDirectory() + "/Image_" + x + ".jpg");
+                                File png = new File(c.getCurrentDirectory() + "/Image_" + x + ".png");
+                                File def = new File(c.getCurrentDirectory() + "/Image_" + x);
                                 
-                                while(jpg.exists() || png.exists()){
+                                while(jpg.exists() || png.exists() || def.exists()){
                                 	x++;
-                                	jpg = new File("Image_" + x + ".jpg");
-                                	png = new File("Image_" + x + ".png");
-                                	def = new File("Image_" + x);
+                                	jpg = new File(c.getCurrentDirectory() + "/Image_" + x + ".jpg");
+                                	png = new File(c.getCurrentDirectory() + "/Image_" + x + ".png");
+                                	def = new File(c.getCurrentDirectory() + "/Image_" + x);
                                 }
                                 
                                 c.setSelectedFile(def);
@@ -655,7 +655,7 @@ public class PcDesign extends JFrame{
 		JMenu edit = new JMenu("Edit..");
 		menuBar.add(edit);
 		
-		JMenuItem moreclrs = new JMenuItem("Buy more colors, now 70% off!");
+		JMenuItem moreclrs = new JMenuItem("More colors");
 		moreclrs.addActionListener(new ActionListener(){
 
 			@Override
@@ -674,7 +674,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e){
-				tool = "basic";
+				setTool(Tools.BASIC);
 			}
 		});
 		tools.add(basic);
@@ -684,7 +684,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e){
-				tool = "strline";
+				setTool(Tools.STRLINE);
 			}
 		});
 		tools.add(strline);
@@ -693,22 +693,17 @@ public class PcDesign extends JFrame{
 		bucket.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				tool = "bucket";
+				setTool(Tools.BUCKET);
 			}
 		});
-		tools.add(bucket);
-		
+		tools.add(bucket);		
 		
 		JMenuItem undo = new JMenuItem("Undo");
 		undo.addActionListener(new ActionListener(){
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				BufferedImage img = undoHistory.pop();
-				if(img != null){
-					initDrawPanel(img.getWidth(), img.getHeight());
-					createImageFrom(img);
-				}
+				undo();
 			}
 		});
 		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
@@ -814,6 +809,18 @@ public class PcDesign extends JFrame{
 		 return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
 	}
 
+	public void setTool(Tools t){
+		tool = t;
+	}
+	
+	protected void undo(){
+		BufferedImage img = undoHistory.pop();
+		if(img != null){
+			initDrawPanel(img.getWidth(), img.getHeight());
+			createImageFrom(img);
+		}
+	}
+	
 	public static void main(String [] args){
 		new PcDesign();
 	}
