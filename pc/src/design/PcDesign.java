@@ -83,7 +83,7 @@ public class PcDesign extends JFrame{
 	protected JPanel drawContainerPanel;
 	protected JPanel drawPanel;
 	protected JPanel topPanel;
-        
+	protected JColorChooser jcc = new JColorChooser(Color.black);    
     protected File filetosave;
     protected File filetoload;
     protected Filters f = new Filters();
@@ -91,6 +91,7 @@ public class PcDesign extends JFrame{
 	protected BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
+	//protected CustomCursor cursor;
 	
 	protected int maxImgW = 0;
 	protected int maxImgH = 0;
@@ -102,6 +103,7 @@ public class PcDesign extends JFrame{
 	
 	protected Stack<BufferedImage> undoHistory;
 	private String tool = "basic";
+	protected Cursor cursor;
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -179,21 +181,19 @@ public class PcDesign extends JFrame{
 			public void mousePressed(MouseEvent e) {
 				BufferedImage img = CloneImage();
 				undoHistory.push(img);
-				if (tool.equals("bucket")){					
-					final int x = e.getX(), y = e.getY();					
+				int x = e.getX(), y = e.getY();	
+				switch(tool){
+				case "bucket" :								
 					int [] arr = new int[drawing.getWidth() * drawing.getHeight()];
 					arr = drawing.getRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arr, 0, drawing.getWidth());
-					final int arrr [] = arr;
+					int arrr [] = arr;
+					break;
+				case "picker" :
+					 Color c = new Color(drawing.getRGB(x, y));
+					 paint.setBrushColor(c);
+					 jcc.setColor(c);
+					 break;
 					
-					new Thread(new Runnable(){
-						@Override
-						public void run() {
-							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, drawing.getWidth());
-							drawing.setRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arrr, 0, drawing.getWidth());
-							drawPanel.repaint();
-						}
-					}).start();
-					return;
 				}
 				lastX = e.getX();
 				lastY = e.getY();
@@ -207,7 +207,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseEntered(MouseEvent e) {
-				setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
+				setCursor(cursor);
 			}
 			
 			@Override
@@ -263,7 +263,8 @@ public class PcDesign extends JFrame{
 		colorPicker.setBorder(BorderFactory.createTitledBorder("Color"));
 		topPanel.add(colorPicker);
 		
-		final JColorChooser jcc = new JColorChooser(Color.black);
+//		final JColorChooser jcc = new JColorChooser(Color.black);
+		jcc.setColor(getForeground());
 		AbstractColorChooserPanel [] acc = jcc.getChooserPanels();
 		for (AbstractColorChooserPanel i : acc){
 			if (!i.getDisplayName().equals("Swatches")){
@@ -643,9 +644,21 @@ public class PcDesign extends JFrame{
 				}
 			}
 		});
+		
 		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
         undo.setAccelerator(ctrlZ);
 		edit.add(undo);        
+		
+		JMenuItem picker = new JMenuItem("Color picker");
+		picker.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tool = "picker";
+				cursor = CustomCursor.pickerCursor;
+				
+			}
+		});
+		tools.add(picker);
 		
 		JMenu help = new JMenu("Help..");
 		menuBar.add(help);
