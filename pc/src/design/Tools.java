@@ -1,5 +1,5 @@
 package design;
 
 public enum Tools {
-	BASIC, STRLINE, BUCKET
+	BASIC, STRLINE, BUCKET, PICKER
 }

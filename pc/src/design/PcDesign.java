@@ -84,11 +84,12 @@ public class PcDesign extends JFrame{
 	protected JPanel drawContainerPanel;
 	protected JPanel drawPanel;
 	protected JPanel topPanel;
-	
+
 	protected JPanel glass;
 	protected PaintBase glassPaint;
 	protected BufferedImage glassImage;
         
+	protected JColorChooser jcc;    
     protected File filetosave;
     protected File filetoload;
     protected Filters f = new Filters();
@@ -96,6 +97,7 @@ public class PcDesign extends JFrame{
 	protected BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
+	//protected CustomCursor cursor;
 	
 	protected int maxImgW = 0;
 	protected int maxImgH = 0;
@@ -109,6 +111,7 @@ public class PcDesign extends JFrame{
 	
 	protected Stack<BufferedImage> undoHistory;
 	protected Tools tool = Tools.BASIC;
+	protected Cursor cursor = CustomCursor.BASIC_CURSOR;
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -225,22 +228,24 @@ public class PcDesign extends JFrame{
 			public void mousePressed(MouseEvent e) {
 				BufferedImage img = cloneImage();
 				undoHistory.push(img);
-				final int x = e.getX(), y = e.getY();	
-				if (tool.equals(Tools.BUCKET)){													
-					final int w = drawing.getWidth(), h = drawing.getHeight();
-					int [] arr = new int[w * h];
-					arr = drawing.getRGB(0, 0, w, h, arr, 0, w);
-					final int arrr [] = arr;
-					
-					new Thread(new Runnable(){
-						@Override
-						public void run() {
-							paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 0);
-							drawing.setRGB(0, 0, w, h, arrr, 0, w);
-							drawPanel.repaint();
-						}
-					}).start();
-					return;
+				int x = e.getX(), y = e.getY();	
+				switch(tool){
+					case BUCKET:{
+						int [] arr = new int[drawing.getWidth() * drawing.getHeight()];
+						int w = drawing.getWidth(), h = drawing.getHeight();
+						arr = drawing.getRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arr, 0, drawing.getWidth());
+						int arrr [] = arr;
+						paint.fill(x, y, drawing.getRGB(x, y), paint.getBrushColor().getRGB(), arrr, w, 0);
+						drawing.setRGB(0, 0, w, h, arrr, 0, w);
+						drawPanel.repaint();
+						break;
+					}						
+					case PICKER:{
+						Color c = new Color(drawing.getRGB(x, y));
+						 paint.setBrushColor(c);
+						 jcc.setColor(c);
+						 break;
+					}					 
 				}
 				lastX = x;
 				lastY = y;
@@ -256,7 +261,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseEntered(MouseEvent e) {
-				setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
+				setCursor(cursor);
 			}
 			
 			@Override
@@ -316,7 +321,8 @@ public class PcDesign extends JFrame{
 		colorPicker.setBorder(BorderFactory.createTitledBorder("Color"));
 		topPanel.add(colorPicker);
 		
-		final JColorChooser jcc = new JColorChooser(Color.black);
+		jcc = new JColorChooser(Color.black);
+		jcc.setColor(getForeground());
 		AbstractColorChooserPanel [] acc = jcc.getChooserPanels();
 		for (AbstractColorChooserPanel i : acc){
 			if (!i.getDisplayName().equals("Swatches")){
@@ -699,6 +705,7 @@ public class PcDesign extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e){
 				setTool(Tools.BASIC);
+				cursor = CustomCursor.BASIC_CURSOR;
 			}
 		});
 		tools.add(basic);
@@ -709,6 +716,7 @@ public class PcDesign extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e){
 				setTool(Tools.STRLINE);
+				cursor = CustomCursor.LINE_CURSOR;
 			}
 		});
 		tools.add(strline);
@@ -718,9 +726,20 @@ public class PcDesign extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				setTool(Tools.BUCKET);
+				cursor = CustomCursor.PICKER_CURSOR;
 			}
 		});
-		tools.add(bucket);		      
+		tools.add(bucket);	
+		
+		JMenuItem picker = new JMenuItem("Color picker");
+		picker.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setTool(Tools.PICKER);
+				cursor = CustomCursor.PICKER_CURSOR;				
+			}
+		});
+		tools.add(picker);
 		
 		JMenu help = new JMenu("Help..");
 		menuBar.add(help);
