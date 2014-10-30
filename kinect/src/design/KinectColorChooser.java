@@ -14,6 +14,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 import core.LightweightMouseListener;
+import core.Stack;
 
 public class KinectColorChooser extends AbstractColorChooserPanel implements ActionListener {
 	int maxSize;
@@ -33,6 +34,8 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 							orange, yellow, green, cyan, blue, magenta};
 	Color [] colors = {Color.white, Color.black, Color.lightGray, Color.darkGray, Color.pink, Color.red,
 					   Color.orange, Color.yellow, Color.green, Color.cyan, Color.blue, Color.magenta};
+	Color [] current = new Color[]{Color.black, Color.black};
+	CustomColorButtonUI [] bui = new CustomColorButtonUI[all.length];
 	
 	public KinectColorChooser(Dimension d){
 		this(d.width, d.height);
@@ -46,26 +49,30 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 	@Override
 	protected void buildChooser() {
 		setLayout(new GridLayout(0, 2));
-		ButtonGroup buttons = new ButtonGroup();
 		
 		for (int i = 0; i < all.length; i++){
-			JToggleButton b = new JToggleButton("", null, false);
-			b.setUI(new CustomColorButtonUI());
+			JToggleButton b = new JToggleButton("", null, false);	
+			CustomColorButtonUI ccb = new CustomColorButtonUI();
+			b.setUI(ccb);
+			bui[i] = ccb;
 			b.setBackground(colors[i]);
 			b.setBorder(new LineBorder(Color.black, 1));
 			b.addMouseListener(new LightweightMouseListener(){
 				@Override
 				public void mousePressed(MouseEvent e) {
-					ActionEvent evt = new ActionEvent(e.getSource(), 0, null);
+					int index = e.getWhen() > 0 ? 1 : 0;
+					ActionEvent evt = new ActionEvent(e.getSource(), index, null);
 					actionPerformed(evt);
 				}
 			});
 			b.addActionListener(this);
 			b.setPreferredSize(new Dimension(maxSize, maxSize));
-			buttons.add(b);
 			add(b);
 			all[i] = b;			
-		}		
+		}
+		
+		all[1].setSelected(true);
+		
 	}
 
 	@Override
@@ -75,11 +82,19 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 
 	@Override
 	public void updateChooser() {
-		Color current = getColorFromModel();
+		//Color c = getColorFromModel();
 		for (int i = 0; i < all.length; i++){
-			if (colors[i] == current){
+			Color c = colors[i];
+			all[i].setSelected(false);
+			bui[i].first = false;
+			if (c == current[0]){
 				all[i].setSelected(true);
-				break;
+				bui[i].first = true;
+			}
+			else {
+				if (c == current[1]){
+					all[i].setSelected(true);
+				}
 			}
 		}
 	}
@@ -96,7 +111,14 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		Color newColor = ((JToggleButton)e.getSource()).getBackground();
+		int index = e.getID() > 0 ? 1 : 0;
+		Color newColor = ((JToggleButton)e.getSource()).getBackground();		
+		current[index] = newColor;		
 		getColorSelectionModel().setSelectedColor(newColor);
+		updateChooser();
+	}
+	
+	public Color [] getSelectedColors(){
+		return current;
 	}
 }

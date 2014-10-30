@@ -68,6 +68,10 @@ public class PaintBase {
 		brush.setCustomStroke(cc);
 	}
 	
+	public CustomStroke getCustomStroke(){
+		return brush.getCustomStroke();
+	}
+	
 	public void setBrushRotation(double r){
 		brush.setRotation(r);
 	}
@@ -168,5 +172,18 @@ public class PaintBase {
 
 	public void clearRect(int x, int y, int w, int h){
 		g.clearRect(x, y, w, h);
+	}
+
+	public void setAntialiasing(boolean isOn){
+		RenderingHints r;
+		if (isOn){
+			r = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+		  			   RenderingHints.VALUE_ANTIALIAS_ON);
+		}
+		else {
+			r = new RenderingHints(RenderingHints.KEY_ANTIALIASING, 
+					   RenderingHints.VALUE_ANTIALIAS_OFF);
+		}
+		g.setRenderingHints(r);
 	}
 }

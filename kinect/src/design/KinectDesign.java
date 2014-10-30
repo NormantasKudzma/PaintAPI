@@ -8,7 +8,6 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
@@ -19,15 +18,17 @@ import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
-import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import javax.swing.colorchooser.DefaultColorSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import core.LightweightMouseListener;
+import core.PaintBase;
 
 
 public class KinectDesign extends PcDesign {	
@@ -39,8 +40,16 @@ public class KinectDesign extends PcDesign {
 	BufferedImage [] cursor = new BufferedImage[2];
 	BufferedImage [] cursorActive = new BufferedImage[2];
 	protected int thisX[] = new int[2], thisY[] = new int[2];
+	protected int lastX[] = new int[2], lastY[] = new int[2];
+	protected int oldX[] = new int[2], oldY[] = new int[2];
 	int sidePanelWidth;		// pakeisti i ploti ir tikrint abiem pusem
 	int menuHeight = 68;	// irgi peles kontrolei svarbus	
+	int xdc;				// Mouse drag x correction
+	int ydc;				// Mouse drag y correction
+	int xcc = 8;				// Mouse x click corr
+	int ycc = 24;				// Mouse y click corr
+	
+	PaintBase paint2;	// constructed on the same graphics object, second user can have their own size/shape/clr etc.
 	
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
@@ -57,15 +66,14 @@ public class KinectDesign extends PcDesign {
 		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");		
 		setUpKinect();
 		
+		paint2 = new PaintBase(paint.getGraphics());
 		setVisible(true);		// Setvisible before resizing to calculate new max sizes
 		setUpMenuBar();
 		initGlassPanel();
 		setUpPanels();
 
 		initDrawPanel(imgW, imgH);
-		createNewImage(imgW, imgH);	
-		//
-		System.out.println();
+		createNewImage(imgW, imgH);			
 	}
 	
 	protected void setUpMenuBar(){
@@ -233,8 +241,17 @@ public class KinectDesign extends PcDesign {
 		drawContainerPanel.setMaximumSize(new Dimension(imgW, imgH));
 		
 		// Resize color chooser panel and swap swatches for our custom color chooser
-		KinectColorChooser [] kcc = {new KinectColorChooser(maxInnerPanelDim)};	
+		final KinectColorChooser [] kcc = {new KinectColorChooser(maxInnerPanelDim)};	
 		JColorChooser jcc = (JColorChooser)((JPanel)c[0]).getComponent(0);
+		jcc.getSelectionModel().removeChangeListener(((DefaultColorSelectionModel)jcc.getSelectionModel()).getChangeListeners()[0]);
+		jcc.getSelectionModel().addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				Color [] clrs = kcc[0].getSelectedColors();
+				paint.setBrushColor(clrs[0]);
+				paint2.setBrushColor(clrs[1]);
+			}		
+		});
 		jcc.setChooserPanels(kcc);
 		jcc.setMaximumSize(maxInnerPanelDim);
 		c[0].setMaximumSize(maxSidePanelDim);
@@ -276,7 +293,7 @@ public class KinectDesign extends PcDesign {
 				}
 			}
 		});
-		updateBrush(8);				
+		updateBrush(8);
 		size.add(plus);
 		size.add(sizeLabel);
 		size.add(minus);
@@ -299,47 +316,59 @@ public class KinectDesign extends PcDesign {
 		rightPanel.repaint();
 		topPanel.revalidate();
 		topPanel.repaint();
-	}
-	
-	protected void dispatchMouseClick(boolean mainSkeleton){
-		switchCursors(mainSkeleton, cursorActive);
-
-		int index = mainSkeleton ? 1 : 0;
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, 0, 0, thisX[index], thisY[index], 1, false);
-		dispatchEvent(e);
-	}
-	
-	protected void dispatchMouseDrag(boolean mainSkeleton){		
-		// DISABLED DRAG CURRENTLY
-//		if (drawContainerPanel.getBounds().contains(thisX, thisY)){
-//			// What source?
-//			MouseEvent e = new MouseEvent(this.drawContainerPanel, MouseEvent.MOUSE_DRAGGED, 0, 0,
-//					thisX - sidePanelWidth, thisY - menuHeight, 1, false);
-//			drawPanel.dispatchEvent(e);
-//		}
-//		
-//		switchCursors(mainSkeleton, cursorActive);
-	}
-	
-	protected void dispatchMouseRelease(boolean mainSkeleton){
-		switchCursors(mainSkeleton, cursor);
 		
-		int index = mainSkeleton ? 1 : 0;
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, 0, 0, thisX[index], thisY[index], 1, true);
+		xdc = sidePanelWidth;
+		ydc = menuHeight + drawPanel.getBounds().y;
+	}
+	
+	protected void dispatchMouseClick(int index){
+		switchCursors(index, cursorActive);
+
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_PRESSED, index, 0, thisX[index] + xcc, thisY[index] + ycc, 1, false);
+		dispatchEvent(e);
+		oldX[index] = lastX[index] = thisX[index];
+		oldY[index] = lastY[index] = thisY[index];
+	}
+	
+	// Logical override of mouseDragged in pcdesign (don't pass too many mousedrag events..)
+	protected void dispatchMouseDrag(int index){	
+		if (drawContainerPanel.getBounds().contains(thisX[index], thisY[index])){
+			switch(tool) {
+				case BASIC:{						
+					paint.drawCenteredLine(lastX[index] - xdc, lastY[index] - ydc, thisX[index] - xdc, thisY[index] - ydc);	
+					break;
+				}
+				case STRLINE:{
+					drawLineToolLine(oldX[index] - xdc, oldY[index] - ydc, lastX[index] - xdc, lastY[index] - ydc);
+					break;
+				}
+			}
+			lastX[index] = thisX[index];
+			lastY[index] = thisY[index];
+		}
+		
+		switchCursors(index, cursorActive);
+	}
+	
+	protected void dispatchMouseRelease(int index){
+		switchCursors(index, cursor);
+		
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, 0, 0, thisX[index] + xcc, thisY[index] + ycc, 1, true);
 		dispatchEvent(e);
 	}
 	
-	protected void switchCursors(boolean mainSkeleton, BufferedImage [] arr){
-		if (mainSkeleton){
-			if (fakeMouse[0] != arr[0]){
-				fakeMouse[0] = arr[0];
-			}
+	protected void switchCursors(int index, BufferedImage [] arr){
+		if (fakeMouse[index] != arr[index]){
+			fakeMouse[index] = arr[index];
 		}
-		else {
-			if (fakeMouse[1] != arr[1]){
-				fakeMouse[1] = arr[1];
-			}
-		}
+	}
+	
+	@Override
+	protected void updateBrush(int size, double rotation, String type) {
+		super.updateBrush(size, rotation, type);
+		paint2.setBrushSize(paint.getBrushSize());
+		paint2.setBrushRotation(paint.getBrushRotation());
+		paint2.setCustomStroke(paint.getCustomStroke());
 	}
 	
 	public static void main(String[] args){

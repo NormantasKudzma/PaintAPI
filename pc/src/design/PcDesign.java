@@ -27,6 +27,7 @@ import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -107,7 +108,7 @@ public class PcDesign extends JFrame{
 	protected int thisY = 0;
 	
 	protected Stack<BufferedImage> undoHistory;
-	private Tools tool = Tools.BASIC;
+	protected Tools tool = Tools.BASIC;
 	
 	public PcDesign(){
 		this(frameWidth, frameHeight);
@@ -130,7 +131,7 @@ public class PcDesign extends JFrame{
 			};
 		};
 
-		glassImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_ARGB);
+		glassImage = new BufferedImage(frameWidth, frameHeight, IMAGE_FORMAT);
 		this.setGlassPane(glass);
 		glass.setVisible(true);
 		glass.setOpaque(false);
@@ -156,6 +157,7 @@ public class PcDesign extends JFrame{
 		glassPaint.getGraphics().setComposite(AlphaComposite.SrcOver);
 		glassPaint.setBrush(paint.getBrush());
 		glassPaint.drawCenteredLine(x1, y1, x2, y2);
+		glass.repaint();
 	}
 
 	protected void initFrame(int w, int h){
@@ -259,7 +261,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(tool.equals("basic")){
+				if(tool == Tools.BASIC){
 					paint.drawCenteredPixel(e.getX(), e.getY());
 				}
 				drawPanel.repaint();
@@ -288,7 +290,6 @@ public class PcDesign extends JFrame{
 					}
 					case STRLINE:{
 						drawLineToolLine(lastX, lastY, x, y);
-						glass.repaint();
 						break;
 					}
 				}
@@ -464,21 +465,22 @@ public class PcDesign extends JFrame{
 		paint.setBrushSize(size);
 		paint.setBrushRotation(rotation);
 		currentShape = type;
+		float spc = size * 0.1f;
 		switch(type){
 			case "rect":{
-				paint.setCustomStroke(new CustomStroke(new RectShape(0, 0, size, size, rotation), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new RectShape(0, 0, size, size, rotation), spc));
 				break;
 			}
 			case "circle":{
-				paint.setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new Ellipse2D.Float(0, 0, size, size), spc));
 				break;
 			}		
 			case "star":{
-				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size, rotation), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new StarShape(0, 0, size, size, rotation), spc));
 				break;
 			}
 			case "triangle":{
-				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size, rotation), size * 0.25f));
+				paint.setCustomStroke(new CustomStroke(new TriangleShape(0, 0, size, size, rotation), spc));
 				break;
 			}
 		}
@@ -665,6 +667,28 @@ public class PcDesign extends JFrame{
 			}			
 		});
 		edit.add(moreclrs);
+		
+		JMenuItem undo = new JMenuItem("Undo");
+		undo.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				undo();
+			}
+		});
+		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
+        undo.setAccelerator(ctrlZ);
+		edit.add(undo);  
+		
+		final JCheckBoxMenuItem aa = new JCheckBoxMenuItem("Antialiasing");
+		aa.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				paint.setAntialiasing(aa.isSelected());
+			}
+		});
+		aa.setSelected(true);
+		edit.add(aa);
 
 		JMenu tools = new JMenu("Tools..");
 		menuBar.add(tools);
@@ -696,19 +720,7 @@ public class PcDesign extends JFrame{
 				setTool(Tools.BUCKET);
 			}
 		});
-		tools.add(bucket);		
-		
-		JMenuItem undo = new JMenuItem("Undo");
-		undo.addActionListener(new ActionListener(){
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				undo();
-			}
-		});
-		KeyStroke ctrlZ = KeyStroke.getKeyStroke("control Z");
-        undo.setAccelerator(ctrlZ);
-		edit.add(undo);        
+		tools.add(bucket);		      
 		
 		JMenu help = new JMenu("Help..");
 		menuBar.add(help);

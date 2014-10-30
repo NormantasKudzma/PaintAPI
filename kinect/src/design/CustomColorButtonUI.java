@@ -12,6 +12,7 @@ import javax.swing.JToggleButton;
 import javax.swing.plaf.basic.BasicButtonUI;
 
 public class CustomColorButtonUI extends BasicButtonUI{
+	boolean first = true;
 	
 	@Override
 	protected void paintButtonPressed(Graphics g, AbstractButton b) {
@@ -35,6 +36,12 @@ public class CustomColorButtonUI extends BasicButtonUI{
 		g2d.drawLine(r.width, r.height, 0, r.height); // LEFT
 		// FROM TOP RIGHT TO BOTTOM LEFT
 		g2d.drawLine(0, r.height, r.width, 0);
+		if (first){
+			g2d.drawString("p1", r.width / 2, 15);
+		}
+		else {
+			g2d.drawString("p2", r.width / 2, r.height - 5);
+		}
 	}
 	
 	@Override

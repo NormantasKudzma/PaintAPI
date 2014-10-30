@@ -9,16 +9,18 @@ import edu.ufl.digitalworlds.j4k.Skeleton;
 public class Kinect extends J4KSDK {	
 	public static double X_TRESHOLD = 0.08;
 	public static double Y_TRESHOLD = 0.08;
-	public static double DRAW_TRESHOLD = 1.8;	// Distance in meters
+	public static double DRAW_TRESHOLD = 0.4;	// Distance in meters
 	
-	public static int X_DELTA_TRESHOLD = 800;
-	public static int Y_DELTA_TRESHOLD = 700;
+	public static int X_DELTA_TRESHOLD = 500;	// X sensitivity
+	public static int Y_DELTA_TRESHOLD = 600;	// Y sensitivity
 	
 	VideoPanel videoPanel;
 	KinectDesign k;
-	boolean isDrawing = false;
-	int trackedJoint = Skeleton.HAND_RIGHT;
+	boolean isDrawing [] = new boolean[]{false, false};
+	int drawJoint = Skeleton.HAND_RIGHT;
 	int controlJoint = Skeleton.HAND_LEFT;
+	int drawShoulder = Skeleton.SHOULDER_RIGHT;
+	int deltaJoint = Skeleton.HEAD;
 	
 	// Data for smoothing
 	double [][] trend = new double[7][3];
@@ -53,7 +55,7 @@ public class Kinect extends J4KSDK {
 			CustomSkeleton s = CustomSkeleton.getSkeleton(i, data, flags);
 			
 			if (flags[i]){
-				trackSkeleton(s.get3DJoint(trackedJoint), s.get3DJoint(controlJoint), firstSkeleton);
+				trackSkeleton(s.get3DJoint(drawJoint), s.get3DJoint(drawShoulder), s.get3DJoint(controlJoint), s.get3DJoint(deltaJoint), firstSkeleton);
 				firstSkeleton = false;
 			}
 			videoPanel.skeletons[i] = s;
@@ -63,8 +65,8 @@ public class Kinect extends J4KSDK {
 		}
 	}
 
-	private void trackSkeleton(double [] drawHand, double [] controlHand, boolean first) {
-		int index = first ? 1 : 0;
+	private void trackSkeleton(double [] drawHand, double [] drawShoulder, double [] controlHand, double [] deltaJoint, boolean first) {
+		int index = first ? 0 : 1;
 		
 		// Fake mouse controls
 		// SMOOTHING DISABLED ATM
@@ -78,23 +80,25 @@ public class Kinect extends J4KSDK {
 //		trend = matrixPush(trend);
 //		trend[0] = drawHand;
 		
-		k.thisX[index] = convertX(drawHand[0]);
-		k.thisY[index] = convertY(drawHand[1]);
+		k.thisX[index] = convertX(drawHand[0], drawShoulder[0]);
+		k.thisY[index] = convertY(drawHand[1], drawShoulder[1]);
 		k.glass.repaint();
 
-		if (controlHand[2] < DRAW_TRESHOLD){
-			if (isDrawing){
-				k.dispatchMouseDrag(first);
+		double dz = Math.abs(deltaJoint[2] - controlHand[2]);
+
+		if (dz >= DRAW_TRESHOLD){
+			if (isDrawing[index]){
+				k.dispatchMouseDrag(index);
 			}
 			else {
-				k.dispatchMouseClick(first);
-				isDrawing = true;
+				k.dispatchMouseClick(index);
+				isDrawing[index] = true;
 			}				
 		}
 		else {
-			if (isDrawing){
-				isDrawing = false;
-				k.dispatchMouseRelease(first);
+			if (isDrawing[index]){
+				isDrawing[index] = false;
+				k.dispatchMouseRelease(index);
 			}
 		}
 	}
@@ -169,19 +173,19 @@ public class Kinect extends J4KSDK {
 		return matrix;
 	}
 	
-	private int convertX(double dx){
+	private int convertX(double dx, double x0){
 		int fw = KinectDesign.frameWidth;
 		double coef = 1.0 * fw / X_DELTA_TRESHOLD;	
-		dx *= 1000;
+		dx = (dx-x0-0.27) * 1000;
 		int x = (int) (coef * (dx + X_DELTA_TRESHOLD / 2));
 		x = Math.max(0, Math.min(fw, x));
 		return x;
 	}
 	
-	private int convertY(double dy){
+	private int convertY(double dy, double y0){
 		int fh = KinectDesign.frameHeight;
 		double coef = 1.0 * fh / Y_DELTA_TRESHOLD;	
-		dy *= 1000;
+		dy = (dy-y0) * 1000;
 		int y = (int) (coef * (dy + Y_DELTA_TRESHOLD / 2));
 		y = fh - Math.max(0, Math.min(fh, y));
 		return y;
