@@ -14,7 +14,7 @@ public class CustomCursor {
 	public static Cursor BUCKET_CURSOR;
 	public static Cursor LINE_CURSOR;
 	
-	private static String [] filenames = new String[]{"basic", "line", "bucket", "pipe"};
+	private static String [] filenames = new String[]{"pencil", "strline", "bucket", "pipe"};
 	private static Cursor [] cs = new Cursor[4];
 	static {
 		try {

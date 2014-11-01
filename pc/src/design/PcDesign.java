@@ -242,16 +242,19 @@ public class PcDesign extends JFrame{
 					}						
 					case PICKER:{
 						Color c = new Color(drawing.getRGB(x, y));
-						 paint.setBrushColor(c);
-						 jcc.setColor(c);
-						 break;
-					}					 
+						paint.setBrushColor(c);
+						jcc.setColor(c);
+						break;
+					}
+					case BASIC:{
+						mouseClicked(e);
+						break;
+					}
 				}
 				lastX = x;
 				lastY = y;
 				thisX = x;
-				thisY = y;
-				mouseClicked(e);
+				thisY = y;			
 			}
 			
 			@Override
@@ -266,9 +269,7 @@ public class PcDesign extends JFrame{
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(tool == Tools.BASIC){
-					paint.drawCenteredPixel(e.getX(), e.getY());
-				}
+				paint.drawCenteredPixel(e.getX(), e.getY());
 				drawPanel.repaint();
 			}
 
@@ -726,10 +727,10 @@ public class PcDesign extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				setTool(Tools.BUCKET);
-				cursor = CustomCursor.PICKER_CURSOR;
+				cursor = CustomCursor.BUCKET_CURSOR;
 			}
 		});
-		tools.add(bucket);	
+		tools.add(bucket);
 		
 		JMenuItem picker = new JMenuItem("Color picker");
 		picker.addActionListener(new ActionListener(){
@@ -781,10 +782,7 @@ public class PcDesign extends JFrame{
 		imgH = h;
 		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
 		drawing.getGraphics().fillRect(0, 0, w, h);
-		if (paint != null){
-			paint.setGraphics((Graphics2D) drawing.getGraphics());
-		}
-		drawPanel.repaint();
+		createImageFrom(drawing);
 	}
 	
 	public void promptCreateNewImage(){

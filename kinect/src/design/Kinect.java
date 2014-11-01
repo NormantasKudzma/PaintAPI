@@ -17,10 +17,13 @@ public class Kinect extends J4KSDK {
 	VideoPanel videoPanel;
 	KinectDesign k;
 	boolean isDrawing [] = new boolean[]{false, false};
-	int drawJoint = Skeleton.HAND_RIGHT;
-	int controlJoint = Skeleton.HAND_LEFT;
-	int drawShoulder = Skeleton.SHOULDER_RIGHT;
-	int deltaJoint = Skeleton.HEAD;
+	int rightHand = Skeleton.HAND_RIGHT;
+	int leftHand = Skeleton.HAND_LEFT;
+	int rightShoulder = Skeleton.SHOULDER_RIGHT;
+	int headJoint = Skeleton.HEAD;
+	
+	double headOffsetX = -0.3;
+	double headOffsetY = 0.45;
 	
 	// Data for smoothing
 	double [][] trend = new double[7][3];
@@ -55,7 +58,7 @@ public class Kinect extends J4KSDK {
 			CustomSkeleton s = CustomSkeleton.getSkeleton(i, data, flags);
 			
 			if (flags[i]){
-				trackSkeleton(s.get3DJoint(drawJoint), s.get3DJoint(drawShoulder), s.get3DJoint(controlJoint), s.get3DJoint(deltaJoint), firstSkeleton);
+				trackSkeleton(s.get3DJoint(rightHand), s.get3DJoint(rightShoulder), s.get3DJoint(leftHand), s.get3DJoint(headJoint), firstSkeleton);
 				firstSkeleton = false;
 			}
 			videoPanel.skeletons[i] = s;
@@ -80,12 +83,12 @@ public class Kinect extends J4KSDK {
 //		trend = matrixPush(trend);
 //		trend[0] = drawHand;
 		
-		k.thisX[index] = convertX(drawHand[0], drawShoulder[0]);
-		k.thisY[index] = convertY(drawHand[1], drawShoulder[1]);
+		k.thisX[index] = convertX(drawHand[0], deltaJoint[0]-headOffsetX);
+		k.thisY[index] = convertY(drawHand[1], deltaJoint[1]-headOffsetY);
 		k.glass.repaint();
 
 		double dz = Math.abs(deltaJoint[2] - controlHand[2]);
-
+		
 		if (dz >= DRAW_TRESHOLD){
 			if (isDrawing[index]){
 				k.dispatchMouseDrag(index);
@@ -176,7 +179,7 @@ public class Kinect extends J4KSDK {
 	private int convertX(double dx, double x0){
 		int fw = KinectDesign.frameWidth;
 		double coef = 1.0 * fw / X_DELTA_TRESHOLD;	
-		dx = (dx-x0-0.27) * 1000;
+		dx = (dx-x0) * 1000;
 		int x = (int) (coef * (dx + X_DELTA_TRESHOLD / 2));
 		x = Math.max(0, Math.min(fw, x));
 		return x;

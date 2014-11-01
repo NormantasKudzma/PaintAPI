@@ -2,9 +2,11 @@ package design;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -51,6 +53,49 @@ public class KinectDesign extends PcDesign {
 	
 	PaintBase paint2;	// constructed on the same graphics object, second user can have their own size/shape/clr etc.
 	
+	public class MultiUserTest implements Runnable{
+
+		@Override
+		public void run() {
+			try {
+				Thread.sleep(2500);				
+				// FIRST USER TESTS
+				// 130;300 red color
+				thisX[0] = 130; thisY[0] = 300;
+				dispatchMouseClick(0);
+				Thread.sleep(250);
+				thisX[0] = 300; thisY[0] = 690;
+				dispatchMouseClick(0);
+				
+				Thread.sleep(500);
+				thisX[0] = 600;
+				Thread.sleep(250);
+				dispatchMouseDrag(0);
+				Thread.sleep(250);
+				dispatchMouseRelease(0);
+				Thread.sleep(250);
+				
+				// SECOND USER TEST
+				thisX[1] = 130; thisY[1] = 380;
+				dispatchMouseClick(1);
+				Thread.sleep(250);
+				thisX[1] = 300; thisY[1] = 690;
+				dispatchMouseClick(1);
+				
+				Thread.sleep(500);
+				thisX[1] = 600;
+				Thread.sleep(250);
+				dispatchMouseDrag(1);
+				Thread.sleep(250);
+				dispatchMouseRelease(1);
+				Thread.sleep(250);
+			}
+			catch (Exception e){
+				e.printStackTrace();
+			}
+		}		
+	}
+	
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
 		videoPanel = new VideoPanel();
@@ -73,7 +118,12 @@ public class KinectDesign extends PcDesign {
 		setUpPanels();
 
 		initDrawPanel(imgW, imgH);
-		createNewImage(imgW, imgH);			
+		createNewImage(imgW, imgH);
+
+		/////////////////////////////////////////
+		// DEBUG 
+		//new Thread(new MultiUserTest()).start();
+		/////////////////////////////////////////
 	}
 	
 	protected void setUpMenuBar(){
@@ -264,7 +314,7 @@ public class KinectDesign extends PcDesign {
 		JPanel size = new JPanel();
 		opts.add(size, 0);
 		size.setLayout(new GridLayout(3, 1));
-		final JLabel sizeLabel = new JLabel("8", SwingConstants.CENTER);
+		final JLabel sizeLabel = new JLabel("16", SwingConstants.CENTER);
 		sizeLabel.setBorder(new LineBorder(Color.black));
 		sizeLabel.setFont(new Font("Courier", Font.BOLD, 42));
 		JButton minus = new JButton("-");
@@ -293,12 +343,16 @@ public class KinectDesign extends PcDesign {
 				}
 			}
 		});
-		updateBrush(8);
+		updateBrush(16);
 		size.add(plus);
 		size.add(sizeLabel);
 		size.add(minus);
 		opts.revalidate();
 		opts.repaint();
+		
+		// Overriding drawpanel's mouse listener (for multiuser support)
+		// Even though the logic is pretty much the same except calling paint methods from
+		// two different PaintBase objects (different colors and shapes/sizes if wanted)
 		
 		// New - rightside panel, top panel becomes leftside panel
 		rightPanel = new JPanel();
@@ -321,6 +375,11 @@ public class KinectDesign extends PcDesign {
 		ydc = menuHeight + drawPanel.getBounds().y;
 	}
 	
+	// Passing player's index via `time` parameter (use getWhen() to parse)
+	// if using mouse to draw - you'll be treated as P1, but select colors as P2
+	// this means you're not really able to choose colors with mouse.
+	// Explanation - getWhen returns time, called from mouse this will be unix time
+	// value.
 	protected void dispatchMouseClick(int index){
 		switchCursors(index, cursorActive);
 
@@ -331,11 +390,16 @@ public class KinectDesign extends PcDesign {
 	}
 	
 	// Logical override of mouseDragged in pcdesign (don't pass too many mousedrag events..)
-	protected void dispatchMouseDrag(int index){	
-		if (drawContainerPanel.getBounds().contains(thisX[index], thisY[index])){
+	protected void dispatchMouseDrag(int index){
+		if (thisX[index] > sidePanelWidth && thisX[index] < frameWidth - sidePanelWidth && thisY[index] > menuHeight){
 			switch(tool) {
 				case BASIC:{						
-					paint.drawCenteredLine(lastX[index] - xdc, lastY[index] - ydc, thisX[index] - xdc, thisY[index] - ydc);	
+					if (index == 0) {
+						paint.drawCenteredLine(lastX[index] - xdc, lastY[index] - ydc, thisX[index] - xdc, thisY[index] - ydc);	
+					}
+					else {
+						paint2.drawCenteredLine(lastX[index] - xdc, lastY[index] - ydc, thisX[index] - xdc, thisY[index] - ydc);	
+					}
 					break;
 				}
 				case STRLINE:{
@@ -353,7 +417,7 @@ public class KinectDesign extends PcDesign {
 	protected void dispatchMouseRelease(int index){
 		switchCursors(index, cursor);
 		
-		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, 0, 0, thisX[index] + xcc, thisY[index] + ycc, 1, true);
+		MouseEvent e = new MouseEvent(this.glass, MouseEvent.MOUSE_RELEASED, index, 0, thisX[index] + xcc, thisY[index] + ycc, 1, true);
 		dispatchEvent(e);
 	}
 	
@@ -369,6 +433,75 @@ public class KinectDesign extends PcDesign {
 		paint2.setBrushSize(paint.getBrushSize());
 		paint2.setBrushRotation(paint.getBrushRotation());
 		paint2.setCustomStroke(paint.getCustomStroke());
+	}
+	
+	// Overriding this method to assign new mouse listeners to paint2 object
+	@Override
+	protected void initDrawPanel(int w, int h) {
+		super.initDrawPanel(w, h);
+		drawPanel.removeMouseListener(drawPanel.getMouseListeners()[0]);
+		drawPanel.addMouseListener(new LightweightMouseListener(){
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				int index = e.getWhen() > 0 ? 1 : 0;
+				PaintBase paintObj = index == 0 ? paint : paint2;
+				switch(tool){
+					case STRLINE:
+						paintObj.drawCenteredLine(oldX[index] - xdc, oldY[index] - ydc, lastX[index] - xdc, lastY[index] - ydc);
+						drawLineToolLine(-1, -1, -1, -1);
+						break;
+				}
+				repaint();
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				int index = e.getWhen() > 0 ? 1 : 0;
+				PaintBase paintObj = index == 0 ? paint : paint2;
+				BufferedImage img = cloneImage();
+				undoHistory.push(img);
+				int x = e.getX(), y = e.getY();	
+				switch(tool){
+					case BUCKET:{
+						int [] arr = new int[drawing.getWidth() * drawing.getHeight()];
+						int w = drawing.getWidth(), h = drawing.getHeight();
+						arr = drawing.getRGB(0, 0, drawing.getWidth(), drawing.getHeight(), arr, 0, drawing.getWidth());
+						int arrr [] = arr;
+						paintObj.fill(x, y, drawing.getRGB(x, y), paintObj.getBrushColor().getRGB(), arrr, w, 0);
+						drawing.setRGB(0, 0, w, h, arrr, 0, w);
+						drawPanel.repaint();
+						break;
+					}						
+					case PICKER:{
+						Color c = new Color(drawing.getRGB(x, y));
+						paintObj.setBrushColor(c);
+						break;
+					}
+					case BASIC:{
+						mouseClicked(e);
+						break;
+					}
+				}
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int index = e.getWhen() > 0 ? 1 : 0;
+				PaintBase paintObj = index == 0 ? paint : paint2;
+				paintObj.drawCenteredPixel(e.getX(), e.getY());
+				drawPanel.repaint();
+			}
+		});
+	}
+	
+	// Overriding method to assign new graphics object to paint2 object
+	@Override
+	public void createImageFrom(BufferedImage b) {
+		super.createImageFrom(b);
+		if (paint2 != null){
+			paint2.setGraphics((Graphics2D) b.getGraphics());
+		}
 	}
 	
 	public static void main(String[] args){
