@@ -10,7 +10,7 @@ public class AndroidDesign extends PcDesign{
 		(new Thread(new CommServer(this))).start();
 	}
 	
-	public synchronized void processAction(String str){
+	public void processAction(String str){
 		System.out.println("Draw called " + str);
 		String [] arr = str.split(" ");
 		int [] coords = new int[arr.length];
@@ -35,18 +35,20 @@ public class AndroidDesign extends PcDesign{
 		drawContainerPanel.repaint();
 	}
 	
-	public synchronized String getImageBytes(){
+	public String getImageBytes(){
 		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ImageIO.write(drawing, "jpg", baos);
-			baos.flush();
-			String arr = new String(baos.toByteArray());
-			baos.close();
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+			ImageIO.write(drawing, "jpg", byteStream);
+			byteStream.flush();
+			String arr = new String(byteStream.toByteArray());
+			byteStream.close();
+			System.out.println("Returned some array..");
 			return arr;
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
+		System.out.println("Returned null");
 		return null;
 	}
 	

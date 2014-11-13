@@ -13,8 +13,7 @@ public class CommServer extends Thread{
 	BufferedReader reader;
 	PrintWriter writer;
 	AndroidDesign design;
-	
-	// wait for connection, start thread
+
 	boolean connected = false;
 	boolean done = false;
 	
@@ -34,21 +33,24 @@ public class CommServer extends Thread{
 			writer = new PrintWriter(socket.getOutputStream());
 			server.close();
 			
-			while (!done && checkConnection()){
+			while (!done){
 				String command = reader.readLine();
-				System.out.println("Got command from phone " + command);
 				design.processAction(command);
 				writer.println(design.getImageBytes());
+				System.out.println("Before flush..");
 				writer.flush();
+				System.out.println("Sent some stuff over.");
+				Thread.sleep(50);
 			}
-			stopClient();
+			stopServer();
 		}
 		catch (Exception e){
+			stopServer();
 			e.printStackTrace();
 		}
 	}
 	
-	public void stopClient(){
+	public void stopServer(){
 		try {
 			System.out.println("Server stopped");
 			done = true;
@@ -59,13 +61,5 @@ public class CommServer extends Thread{
 		catch (Exception e){
 			e.printStackTrace();
 		}
-	}
-	
-	private boolean checkConnection(){
-		boolean isConnected = socket.isConnected();
-		if (!isConnected){
-			stopClient();
-		}
-		return isConnected;
 	}
 }
