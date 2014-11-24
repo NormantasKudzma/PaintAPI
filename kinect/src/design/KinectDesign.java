@@ -36,22 +36,22 @@ import core.PaintBase;
 public class KinectDesign extends PcDesign {	
 	Kinect k;
 	VideoPanel videoPanel;
-	BufferedImage [] fakeMouse = new BufferedImage[2];
-	JPanel rightPanel;
+	protected BufferedImage [] fakeMouse = new BufferedImage[2];
+	protected JPanel rightPanel;
 	
-	BufferedImage [] cursor = new BufferedImage[2];
-	BufferedImage [] cursorActive = new BufferedImage[2];
+	protected BufferedImage [] cursor = new BufferedImage[2];
+	protected BufferedImage [] cursorActive = new BufferedImage[2];
 	protected int thisX[] = new int[2], thisY[] = new int[2];
 	protected int lastX[] = new int[2], lastY[] = new int[2];
 	protected int oldX[] = new int[2], oldY[] = new int[2];
-	int sidePanelWidth;		// pakeisti i ploti ir tikrint abiem pusem
-	int menuHeight = 68;	// irgi peles kontrolei svarbus	
-	int xdc;				// Mouse drag x correction
-	int ydc;				// Mouse drag y correction
-	int xcc = 8;				// Mouse x click corr
-	int ycc = 24;				// Mouse y click corr
+	protected int sidePanelWidth;
+	protected int menuHeight = 68;	// irgi peles kontrolei svarbus	
+	protected int xdc;				// Mouse drag x correction
+	protected int ydc;				// Mouse drag y correction
+	protected int xcc = 8;				// Mouse x click corr
+	protected int ycc = 24;				// Mouse y click corr
 	
-	PaintBase paint2;	// constructed on the same graphics object, second user can have their own size/shape/clr etc.
+	protected PaintBase paint2;	// constructed on the same graphics object, second user can have their own size/shape/clr etc.
 	
 	public class MultiUserTest implements Runnable{
 
@@ -109,7 +109,7 @@ public class KinectDesign extends PcDesign {
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		
 		setTitle("The amazing paint for PC + Microsoft Windows® Kinect™ v1, v0.101");		
-		setUpKinect();
+		setUpDevice();
 		
 		paint2 = new PaintBase(paint.getGraphics());
 		setVisible(true);		// Setvisible before resizing to calculate new max sizes
@@ -143,6 +143,7 @@ public class KinectDesign extends PcDesign {
 				}
 			});
 			toolbar.add(newfile);
+			toolbar.addSeparator(separatorDim);
 			
 			JButton savefile = new JButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "savefile.png"))));
 			savefile.addMouseListener(new LightweightMouseListener(){
@@ -152,6 +153,7 @@ public class KinectDesign extends PcDesign {
 				}
 			});
 			toolbar.add(savefile);
+			toolbar.addSeparator(separatorDim);
 			
 			JButton loadfile = new JButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "loadfile.png"))));
 			loadfile.addMouseListener(new LightweightMouseListener(){
@@ -162,6 +164,7 @@ public class KinectDesign extends PcDesign {
 			});
 			toolbar.add(loadfile);
 			
+			toolbar.addSeparator(separatorDim);
 			toolbar.addSeparator(separatorDim);
 			// Tools
 			ButtonGroup tools = new ButtonGroup();
@@ -177,6 +180,7 @@ public class KinectDesign extends PcDesign {
 			toolbar.add(pencil);
 			tools.add(pencil);
 			tools.setSelected(pencil.getModel(), true);
+			toolbar.addSeparator(separatorDim);
 			
 			final JToggleButton strline = new JToggleButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "strline.png"))));
 			strline.addMouseListener(new LightweightMouseListener(){
@@ -188,6 +192,7 @@ public class KinectDesign extends PcDesign {
 			});
 			toolbar.add(strline);
 			tools.add(strline);
+			toolbar.addSeparator(separatorDim);
 			
 			final JToggleButton bucket = new JToggleButton(new ImageIcon(ImageIO.read(cl.getResource(RES_PATH + "bucket.png"))));
 			bucket.addMouseListener(new LightweightMouseListener(){
@@ -199,6 +204,7 @@ public class KinectDesign extends PcDesign {
 			});
 			toolbar.add(bucket);
 			tools.add(bucket);
+			toolbar.addSeparator(separatorDim);
 			
 			toolbar.addSeparator(separatorDim);
 			// Edit functions
@@ -223,7 +229,7 @@ public class KinectDesign extends PcDesign {
 		menubar.add(toolbar);
 	}
 	
-	protected void setUpKinect(){
+	protected void setUpDevice(){
 		k = new Kinect();				
 		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_80x60, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
 			System.out.println("Error starting kinect.");
@@ -308,8 +314,7 @@ public class KinectDesign extends PcDesign {
 
 		// Changing the old size chooser (new is buttons, easier to use)
 		JPanel opts = ((JPanel)c[1]);
-		opts.remove(1);
-		opts.remove(0);
+		opts.removeAll();
 		opts.setMaximumSize(new Dimension(maxInnerPanelDim.width, (int) (maxInnerPanelDim.height * 0.5f)));
 		JPanel size = new JPanel();
 		opts.add(size, 0);
