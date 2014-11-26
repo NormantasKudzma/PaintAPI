@@ -35,7 +35,7 @@ import core.PaintBase;
 
 public class KinectDesign extends PcDesign {	
 	Kinect k;
-	VideoPanel videoPanel;
+	protected VideoPanel videoPanel;
 	protected BufferedImage [] fakeMouse = new BufferedImage[2];
 	protected JPanel rightPanel;
 	

@@ -3,16 +3,16 @@ package design;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
-import javax.imageio.ImageIO;
 import javax.swing.JColorChooser;
 import javax.swing.JPanel;
 
 import com.leapmotion.leap.Controller;
 import com.leapmotion.leap.Gesture;
+
+import design.KinectColorChooser;
+import design.KinectDesign;
+import design.LeapController;
 
 public class LeapDesign extends KinectDesign{
 	LeapController leapMotion;
@@ -59,7 +59,7 @@ public class LeapDesign extends KinectDesign{
 		kcc = (KinectColorChooser) jcc.getChooserPanels()[0];
 	}
 	
-	void nextColor(int index, int direction){
+	public void nextColor(int index, int direction){
 		Color clr = kcc.getSelectedColors()[index];
 		int clrNum = (getColorNum(clr) + direction) % kcc.all.length;
 		if (clrNum < 0){

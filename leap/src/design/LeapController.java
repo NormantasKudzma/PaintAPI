@@ -6,12 +6,15 @@ import com.leapmotion.leap.Finger.Type;
 import com.leapmotion.leap.FingerList;
 import com.leapmotion.leap.Frame;
 import com.leapmotion.leap.Gesture;
-import com.leapmotion.leap.GestureList;
 import com.leapmotion.leap.Hand;
 import com.leapmotion.leap.HandList;
 import com.leapmotion.leap.Listener;
 import com.leapmotion.leap.SwipeGesture;
 import com.leapmotion.leap.Vector;
+
+import design.KinectDesign;
+import design.LeapDesign;
+import design.Smoothing;
 
 public class LeapController extends Listener implements Runnable{
 	public static final double DRAW_TRESHOLD = 70;
