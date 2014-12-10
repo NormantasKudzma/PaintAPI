@@ -3,9 +3,10 @@ package core;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
+/**
+ * Jpg and Png filter classes for loading and saving images
+ */
 public class Filters {
-    
-    // jpg and png filter classes for JFileChooser
     public class jpgSaveFilter extends FileFilter { 
         public boolean accept(File f)
         {

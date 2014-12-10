@@ -2,7 +2,6 @@ package design;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -32,70 +31,47 @@ import javax.swing.event.ChangeListener;
 import core.LightweightMouseListener;
 import core.PaintBase;
 
-
+/**
+ * Class responsible for Kinect's GUI
+ */
 public class KinectDesign extends PcDesign {	
 	Kinect k;
 	VideoPanel videoPanel;
+		
+	/**
+	 * Mouses, than can only be moved via dispatchMouse- events,
+	 * these represent logical (fake) mouses.
+	 */
 	protected BufferedImage [] fakeMouse = new BufferedImage[2];
-	protected JPanel rightPanel;
-	
 	protected BufferedImage [] cursor = new BufferedImage[2];
 	protected BufferedImage [] cursorActive = new BufferedImage[2];
 	protected int thisX[] = new int[2], thisY[] = new int[2];
 	protected int lastX[] = new int[2], lastY[] = new int[2];
 	protected int oldX[] = new int[2], oldY[] = new int[2];
+	
+	/**
+	 * Menu dimensions, used to correct mouse click position values
+	 */
+	protected JPanel rightPanel;
 	protected int sidePanelWidth;
-	protected int menuHeight = 68;	// irgi peles kontrolei svarbus	
-	protected int xdc;				// Mouse drag x correction
-	protected int ydc;				// Mouse drag y correction
+	protected int menuHeight = 68;
+	
+	/**
+	 * Mouse correction and pointer offset values
+	 */
+	protected int xdc;					// Mouse drag x correction
+	protected int ydc;					// Mouse drag y correction
 	protected int xcc = 8;				// Mouse x click corr
 	protected int ycc = 24;				// Mouse y click corr
 	
-	protected PaintBase paint2;	// constructed on the same graphics object, second user can have their own size/shape/clr etc.
+	/** Second user's paint object, 
+	 *	currently only color selections can differ
+	 */
+	protected PaintBase paint2;
 	
-	public class MultiUserTest implements Runnable{
-
-		@Override
-		public void run() {
-			try {
-				Thread.sleep(2500);				
-				// FIRST USER TESTS
-				// 130;300 red color
-				thisX[0] = 130; thisY[0] = 300;
-				dispatchMouseClick(0);
-				Thread.sleep(250);
-				thisX[0] = 300; thisY[0] = 690;
-				dispatchMouseClick(0);
-				
-				Thread.sleep(500);
-				thisX[0] = 600;
-				Thread.sleep(250);
-				dispatchMouseDrag(0);
-				Thread.sleep(250);
-				dispatchMouseRelease(0);
-				Thread.sleep(250);
-				
-				// SECOND USER TEST
-				thisX[1] = 130; thisY[1] = 380;
-				dispatchMouseClick(1);
-				Thread.sleep(250);
-				thisX[1] = 300; thisY[1] = 690;
-				dispatchMouseClick(1);
-				
-				Thread.sleep(500);
-				thisX[1] = 600;
-				Thread.sleep(250);
-				dispatchMouseDrag(1);
-				Thread.sleep(250);
-				dispatchMouseRelease(1);
-				Thread.sleep(250);
-			}
-			catch (Exception e){
-				e.printStackTrace();
-			}
-		}		
-	}
-	
+	/**
+	 * Constructor initializes new window (resizes old components and moves them around)
+	 */
 	public KinectDesign(){	
 		setVisible(false);					// Hide while initializing
 		videoPanel = new VideoPanel();
@@ -112,20 +88,20 @@ public class KinectDesign extends PcDesign {
 		setUpDevice();
 		
 		paint2 = new PaintBase(paint.getGraphics());
-		setVisible(true);		// Setvisible before resizing to calculate new max sizes
+		// Setvisible before resizing to calculate new max sizes
+		setVisible(true);		
 		setUpMenuBar();
 		initGlassPanel();
 		setUpPanels();
 
 		initDrawPanel(imgW, imgH);
 		createNewImage(imgW, imgH);
-
-		/////////////////////////////////////////
-		// DEBUG 
-		//new Thread(new MultiUserTest()).start();
-		/////////////////////////////////////////
 	}
 	
+	/**
+	 * Method sets up new top one menu bar which has easily clickable icons, instead of 
+	 * menus and menu items
+	 */
 	protected void setUpMenuBar(){
 		Dimension separatorDim = new Dimension(menuHeight / 2, menuHeight / 2);
 		
@@ -229,18 +205,24 @@ public class KinectDesign extends PcDesign {
 		menubar.add(toolbar);
 	}
 	
+	/**
+	 * Initializes everything related to Kinect
+	 */
 	protected void setUpDevice(){
 		k = new Kinect();				
 		if (k.start(true, Kinect.NUI_IMAGE_RESOLUTION_80x60, Kinect.NUI_IMAGE_RESOLUTION_640x480) == 0){
 			System.out.println("Error starting kinect.");
 		}
-		k.computeUV(true);	// show video?
-		//k.startSkeletonTracking(true); // track only head + hands? (not needed anymore)
+		k.computeUV(true);
 		k.setNearMode(true);
 		k.videoPanel = videoPanel;
 		k.k = this;
 	}
 	
+	/**
+	 * Method creates a transparent (hence, the glass) panel over the top of all components.
+	 * It is used to draw fake mouses and their related stuff.
+	 */
 	@Override
 	protected void initGlassPanel(){
 		super.initGlassPanel();
@@ -272,6 +254,10 @@ public class KinectDesign extends PcDesign {
 		glass.repaint();
 	}
 	
+	/**
+	 * Resize, remove unneeded and move around old components, add new, custom, easily clickable
+	 * components instead.
+	 */
 	protected void setUpPanels(){
 		// Change the layout first of all
 		setLayout(new BoxLayout(this.getContentPane(), BoxLayout.X_AXIS));
@@ -293,11 +279,10 @@ public class KinectDesign extends PcDesign {
 		frameHeight = this.getHeight();
 		imgW = (int) (frameWidth - 2 * sidePanelWidth * 0.99f);
 		imgH = (int) (frameHeight * 0.95f - getJMenuBar().getHeight());
-		//drawContainerPanel.setBounds(sidePanelWidth, menuHeight, imgW, imgH);
 		drawContainerPanel.setMaximumSize(new Dimension(imgW, imgH));
 		
 		// Resize color chooser panel and swap swatches for our custom color chooser
-		final KinectColorChooser [] kcc = {new KinectColorChooser(maxInnerPanelDim)};	
+		final CustomColorChooser [] kcc = {new CustomColorChooser(maxInnerPanelDim)};	
 		JColorChooser jcc = (JColorChooser)((JPanel)c[0]).getComponent(0);
 		jcc.getSelectionModel().removeChangeListener(((DefaultColorSelectionModel)jcc.getSelectionModel()).getChangeListeners()[0]);
 		jcc.getSelectionModel().addChangeListener(new ChangeListener(){
@@ -380,11 +365,11 @@ public class KinectDesign extends PcDesign {
 		ydc = menuHeight + drawPanel.getBounds().y;
 	}
 	
-	// Passing player's index via `time` parameter (use getWhen() to parse)
-	// if using mouse to draw - you'll be treated as P1, but select colors as P2
-	// this means you're not really able to choose colors with mouse.
-	// Explanation - getWhen returns time, called from mouse this will be unix time
-	// value.
+	/**
+	 * Method, which dispatches a logical mouse click at current coordinates (thisXY) for
+	 * user whos index is passed via parameter.
+	 * @param index - user, which dispatched the mouse click
+	 */
 	protected void dispatchMouseClick(int index){
 		switchCursors(index, cursorActive);
 
@@ -394,7 +379,10 @@ public class KinectDesign extends PcDesign {
 		oldY[index] = lastY[index] = thisY[index];
 	}
 	
-	// Logical override of mouseDragged in pcdesign (don't pass too many mousedrag events..)
+	/**
+	 * Method, which dispatches a logical mouse drag, using current (thisXY) and last (lastXY) coordinates.
+	 * @param index - user, which dispatched the mouse drag
+	 */
 	protected void dispatchMouseDrag(int index){
 		if (thisX[index] > sidePanelWidth && thisX[index] < frameWidth - sidePanelWidth && thisY[index] > menuHeight){
 			switch(tool) {
@@ -419,6 +407,11 @@ public class KinectDesign extends PcDesign {
 		switchCursors(index, cursorActive);
 	}
 	
+	/**
+	 * Method, which dispatches a logical mouse release at current (thisXY) coordinates. Used for various
+	 * GUI functions.
+	 * @param index - user, which dispatched the mouse release
+	 */
 	protected void dispatchMouseRelease(int index){
 		switchCursors(index, cursor);
 		
@@ -426,12 +419,20 @@ public class KinectDesign extends PcDesign {
 		dispatchEvent(e);
 	}
 	
+	/**
+	 * Switch cursor image when the user is performing a mouse click/drag.
+	 * @param index - for which user to switch cursors
+	 * @param arr - cursor image array
+	 */
 	protected void switchCursors(int index, BufferedImage [] arr){
 		if (fakeMouse[index] != arr[index]){
 			fakeMouse[index] = arr[index];
 		}
 	}
 	
+	/**
+	 * Overriden method to also update information on second user's paint object
+	 */
 	@Override
 	protected void updateBrush(int size, double rotation, String type) {
 		super.updateBrush(size, rotation, type);
@@ -440,7 +441,11 @@ public class KinectDesign extends PcDesign {
 		paint2.setCustomStroke(paint.getCustomStroke());
 	}
 	
-	// Overriding this method to assign new mouse listeners to paint2 object
+
+	/**
+	 * Overriden method, to include new mouse listeners (for two users) for the drawing panel.
+	 * User's index is passed via time parameter.
+	 */
 	@Override
 	protected void initDrawPanel(int w, int h) {
 		super.initDrawPanel(w, h);
@@ -500,7 +505,9 @@ public class KinectDesign extends PcDesign {
 		});
 	}
 	
-	// Overriding method to assign new graphics object to paint2 object
+	/**
+	 * Overriden method, which also updates second user's paint object on image data change
+	 */
 	@Override
 	public void createImageFrom(BufferedImage b) {
 		super.createImageFrom(b);

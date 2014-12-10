@@ -3,22 +3,21 @@ package design;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
-import javax.imageio.ImageIO;
 import javax.swing.JColorChooser;
 import javax.swing.JPanel;
 
 import com.leapmotion.leap.Controller;
 import com.leapmotion.leap.Gesture;
 
+/**
+ * GUI class for LeapMotion
+ */
 public class LeapDesign extends KinectDesign{
 	LeapController leapMotion;
 	Controller c;
 	
-	KinectColorChooser kcc;
+	CustomColorChooser kcc;
 	Image lastImage;
 	JPanel leapVideoPanel;
 	
@@ -28,6 +27,9 @@ public class LeapDesign extends KinectDesign{
 		initVideoPanel();
 	}
 	
+	/**
+	 *  Creates controller, adds frame listener and starts processing thread
+	 */
 	@Override
 	protected void setUpDevice() {
 		System.out.println("Setup device called");
@@ -40,6 +42,9 @@ public class LeapDesign extends KinectDesign{
 		new Thread(leapMotion).start();
 	}
 	
+	/**
+	 * Initializes video panel in the upper-right hand corner (currently not working)
+	 */
 	void initVideoPanel(){
 		videoPanel.stopAnimation();
 		rightPanel.remove(0);
@@ -54,11 +59,19 @@ public class LeapDesign extends KinectDesign{
 		rightPanel.invalidate();
 	}
 	
+	/**
+	 * Initializes color chooser panel
+	 */
 	void initColorChooser(){
 		JColorChooser jcc = (JColorChooser)((JPanel)topPanel.getComponents()[0]).getComponent(0);
-		kcc = (KinectColorChooser) jcc.getChooserPanels()[0];
+		kcc = (CustomColorChooser) jcc.getChooserPanels()[0];
 	}
 	
+	/**
+	 * Method for choosing <i>next</i> color on the color chooser
+	 * @param index - which user selected color
+	 * @param direction - either to the left or to the right of current color
+	 */
 	void nextColor(int index, int direction){
 		Color clr = kcc.getSelectedColors()[index];
 		int clrNum = (getColorNum(clr) + direction) % kcc.all.length;
@@ -69,6 +82,11 @@ public class LeapDesign extends KinectDesign{
 		kcc.actionPerformed(evt);
 	}
 	
+	/**
+	 * 
+	 * @param c - currently selected color
+	 * @return Index of color in the array (or -1 if there's no such color)
+	 */
 	int getColorNum(Color c){
 		for (int i = 0; i < kcc.all.length; i++){
 			if (kcc.all[i].getBackground() == c){
@@ -77,21 +95,6 @@ public class LeapDesign extends KinectDesign{
 		}
 		return -1;
 	}
-	
-//	void setImage(com.leapmotion.leap.Image img){
-//		try {
-//			if (leapVideoPanel != null){
-//				byte [] arr = img.data();
-//				InputStream in = new ByteArrayInputStream(arr);
-//				BufferedImage bi = ImageIO.read(in);
-//				lastImage = bi;
-//				leapVideoPanel.repaint();
-//			}
-//		}
-//		catch (Exception e){
-//			e.printStackTrace();
-//		}
-//	}
 	
 	public static void main(String [] args){
 		new LeapDesign();

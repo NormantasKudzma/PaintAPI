@@ -1,13 +1,8 @@
 package core;
 
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.NoSuchElementException;
-
+/**
+ * Custom star shaped class
+ */
 public class StarShape extends AbstractShape{
 	public static float [] ctrl = {0.175f, 0.975f,   0.3f,   0.6f,
 								   0f,     0.4f,     0.375f, 0.425f,

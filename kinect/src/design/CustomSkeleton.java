@@ -5,6 +5,11 @@ import javax.media.opengl.GL2;
 import edu.ufl.digitalworlds.j4k.J4KSDK;
 import edu.ufl.digitalworlds.j4k.Skeleton;
 
+/**
+ * A little bit modified version of Kinect's Skeleton - it tracks and marks only hand positions on
+ * the video panel.
+ *
+ */
 public class CustomSkeleton extends Skeleton{
 	public static float TRACKING_POINT_RADIUS = 12;
 		
@@ -25,7 +30,6 @@ public class CustomSkeleton extends Skeleton{
 		return sk;
 	}
 	
-	// Custom draw method to track only hands
 	@Override
 	public void draw(GL2 gl) {
 		if (isTracked()){

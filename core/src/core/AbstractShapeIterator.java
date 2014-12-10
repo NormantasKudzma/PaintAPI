@@ -4,6 +4,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.util.NoSuchElementException;
 
+/**
+ * AbstractShape iterator's class
+ */
 public class AbstractShapeIterator implements PathIterator {
 	AffineTransform at;
 	int index;
@@ -40,7 +43,6 @@ public class AbstractShapeIterator implements PathIterator {
 
 			at.rotate(Math.toRadians(-rotation), 0.5f, 0.5f);
 			at.transform(points, 0, points, 0, 1);
-			//System.out.println(points[0] + "\t" + points[1]);
 			return SEG_MOVETO;
 		}
 		points[0] = (float)(x + c[2 * index] * w);
@@ -50,7 +52,6 @@ public class AbstractShapeIterator implements PathIterator {
 		if (index == sz - 1){
 			at.rotate(Math.toRadians(rotation));
 		}
-		//System.out.println(points[0] + "\t" + points[1]);
 		return SEG_LINETO;
 	}
 

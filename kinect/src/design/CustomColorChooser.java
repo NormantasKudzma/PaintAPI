@@ -7,17 +7,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 
-import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.JToggleButton;
 import javax.swing.border.LineBorder;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 import core.LightweightMouseListener;
-import core.Stack;
 
-public class KinectColorChooser extends AbstractColorChooserPanel implements ActionListener {
+/**
+ * A custom color chooser class for kinect, leapmotion and other devices which do not have direct
+ * control over mouse.
+ */
+public class CustomColorChooser extends AbstractColorChooserPanel implements ActionListener {
+	// Maximum button dimensions
 	int maxSize;
+	
+	// Color choices (default colors, can be extended with custom html code colors)
 	JToggleButton white;
 	JToggleButton black;
 	JToggleButton red;
@@ -37,11 +42,11 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 	Color [] current = new Color[]{Color.black, Color.black};
 	CustomColorButtonUI [] bui = new CustomColorButtonUI[all.length];
 	
-	public KinectColorChooser(Dimension d){
+	public CustomColorChooser(Dimension d){
 		this(d.width, d.height);
 	}
 	
-	public KinectColorChooser(int w, int h){
+	public CustomColorChooser(int w, int h){
 		maxSize = w < h ? w : h;
 		maxSize /= 2;
 	}
@@ -80,9 +85,11 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 		return "KinectColorChooser";
 	}
 
+	/**
+	 * Sets selected colors for both users
+	 */
 	@Override
 	public void updateChooser() {
-		//Color c = getColorFromModel();
 		for (int i = 0; i < all.length; i++){
 			Color c = colors[i];
 			all[i].setSelected(false);
@@ -109,6 +116,11 @@ public class KinectColorChooser extends AbstractColorChooserPanel implements Act
 		return null;
 	}
 
+	/**
+	 * Passes a generated event for color chooser to process. Users' index is passed via
+	 * event's `time` field.
+	 * @param e - event to be processed
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		int index = e.getID() > 0 ? 1 : 0;

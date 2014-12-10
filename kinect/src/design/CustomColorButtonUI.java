@@ -11,6 +11,9 @@ import javax.swing.JComponent;
 import javax.swing.JToggleButton;
 import javax.swing.plaf.basic.BasicButtonUI;
 
+/**
+ * A custom ButtonUI used in CustomColorChooser class.
+ */
 public class CustomColorButtonUI extends BasicButtonUI{
 	boolean first = true;
 	
@@ -27,14 +30,14 @@ public class CustomColorButtonUI extends BasicButtonUI{
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.setColor(c);
 		g2d.setStroke(new BasicStroke(4));
-		// FROM TOP LEFT
-		g2d.drawLine(0, 0, r.width, 0);	// RIGHT
-		g2d.drawLine(0, 0, r.width, r.height); // DOWN RIGHT
-		g2d.drawLine(0, 0, 0, r.height); // DOWN
-		// FROM BOTTOM RIGHT
-		g2d.drawLine(r.width, r.height, r.width, 0); // UP
-		g2d.drawLine(r.width, r.height, 0, r.height); // LEFT
-		// FROM TOP RIGHT TO BOTTOM LEFT
+
+		g2d.drawLine(0, 0, r.width, 0);
+		g2d.drawLine(0, 0, r.width, r.height);
+		g2d.drawLine(0, 0, 0, r.height);
+
+		g2d.drawLine(r.width, r.height, r.width, 0);
+		g2d.drawLine(r.width, r.height, 0, r.height);
+
 		g2d.drawLine(0, r.height, r.width, 0);
 		if (first){
 			g2d.drawString("p1", r.width / 2, 15);

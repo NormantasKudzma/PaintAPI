@@ -1,5 +1,9 @@
 package core;
 
+/**
+ * Undo history stack class (generic)
+ * @param <T>
+ */
 public class Stack <T extends Object> {
 
 	private static int stackSize = 15;

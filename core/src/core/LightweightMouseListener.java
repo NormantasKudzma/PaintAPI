@@ -3,6 +3,9 @@ package core;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+/**
+ * A lightweight mouse listener class (not all mouse events must be overriden)
+ */
 public class LightweightMouseListener implements MouseListener {
 
 	@Override

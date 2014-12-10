@@ -4,6 +4,9 @@ import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 
+/**
+ * Custom brush, used in paint object class
+ */
 public class Brush {
 	private int size;
 	private double rotation;
@@ -13,6 +16,13 @@ public class Brush {
 	// Only for internal use in PaintBase class
 	public Brush(){}
 	
+	/**
+	 * Creates a brush with given parameters.
+	 * @param size
+	 * @param rotation
+	 * @param color
+	 * @param cc - shape
+	 */
 	public Brush(int size, double rotation, Color color, CustomStroke cc){
 		setSize(size);
 		setRotation(rotation);

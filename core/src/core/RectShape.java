@@ -1,6 +1,8 @@
 package core;
 
-
+/**
+ * Custom rectangle shape class
+ */
 public class RectShape extends AbstractShape {
 	public static final float [] ctrl = {0, 0, 1, 0, 1, 1, 0, 1};
 	

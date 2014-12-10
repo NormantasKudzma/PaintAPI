@@ -8,11 +8,19 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 
+/**
+ * Class used to implement custom shaped strokes
+ */
 public class CustomStroke implements Stroke {
 	private AffineTransform transform = new AffineTransform();
 	private Shape ss;
 	private float spc = 0;
 	
+	/**
+	 * Creates a new custom shaped stroke with given parameters
+	 * @param shape
+	 * @param spacing - space between shape draws
+	 */
 	public CustomStroke(Shape shape, float spacing){
 		ss = shape;
 		spc = spacing;

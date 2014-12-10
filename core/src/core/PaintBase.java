@@ -8,7 +8,11 @@ import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
+/**
+ * Class responsible for handling all graphical events
+ */
 public class PaintBase {
+	// Brush related variables
 	public static final int DEFAULT_SIZE = 4;
 	public static final double DEFAULT_ROTATION = 0;
 	public static final Color DEFAULT_COLOR = Color.black;
@@ -16,9 +20,7 @@ public class PaintBase {
 	
 	protected Graphics2D g;
 	protected Brush brush;
-	
-	private ArrayList<Point> q;
-	
+
 	public PaintBase(){
 		brush = new Brush();
 		brush.setColor(DEFAULT_COLOR);
@@ -32,6 +34,11 @@ public class PaintBase {
 		setGraphics(graphics);	
 	}
 	
+	/**
+	 * Methods to draw line
+	 * @param xy1 - from
+	 * @param xy2 - to
+	 */
 	public void drawLine(int x1, int y1, int x2, int y2){
 		g.drawLine(x1, y1, x2, y2);	
 	}
@@ -48,7 +55,12 @@ public class PaintBase {
 		x2 -= hs; y2 -= hs;
 		drawLine(x1, y1, x2, y2);
 	}
-		
+	
+	/**
+	 * Methods to draw single point
+	 * @param x - x position
+	 * @param y - y position
+	 */
 	public void drawPixel(int x, int y){
 		Shape s = brush.getCustomStroke().getShape();
 		g.translate(x, y);
@@ -122,10 +134,19 @@ public class PaintBase {
 		setCustomStroke(brush.getCustomStroke());
 	}
 
+	/**
+	 * Methods to fill a closed shape
+	 * @param x - x position
+	 * @param y - y position
+	 * @param oldClr - current pixel color
+	 * @param newClr - new pixel color
+	 * @param img - current image
+	 * @param w - images width
+	 */
 	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w){
 		fill(x, y, oldClr, newClr, img, w, 0);
 	}
-	// 4-Way flood fill using queue. Run this on a thread to reduce impact on performance
+	// 4-Way flood fill using queue
 	public void fill(int x, int y, int oldClr, int newClr, int [] img, int w, int treshold){	
 		int h = img.length / w - 1;
 		if (x <0 || y < 0 || x > w || y > h){
@@ -136,7 +157,7 @@ public class PaintBase {
 			return;
 		}
 		
-		q = new ArrayList<Point>(10000);
+		ArrayList<Point> q = new ArrayList<Point>(10000);
 		q.add(new Point(x, y));
 		while (!q.isEmpty()){
 			Point p = q.remove(q.size() - 1);
@@ -152,6 +173,13 @@ public class PaintBase {
 		}
 	}
 	
+	/**
+	 * Method calculates if color differs from other color by less than amount
+	 * @param newClr
+	 * @param oldClr
+	 * @param treshold
+	 * @return true if delta is less than treshold
+	 */
 	public boolean alphaTreshold(int newClr, int oldClr, int treshold){
 		int mr = 0x00ff0000, mg = 0x0000ff00, mb = 0x000000ff;
 		int or, og, ob, nr, ng, nb;

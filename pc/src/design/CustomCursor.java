@@ -1,12 +1,15 @@
 package design;
+
 import java.awt.Cursor;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 
 import javax.imageio.ImageIO;
 
+/**
+ * Class, which creates different cursor icons for each tool available
+ */
 public class CustomCursor {
 	protected static final String RES_PATH = "res/";
 	public static Cursor PICKER_CURSOR;
@@ -26,7 +29,7 @@ public class CustomCursor {
 				image = ImageIO.read(cl.getResource(RES_PATH + filenames[i] + ".png"));
 				cs[i] = toolkit.createCustomCursor(image, hotSpot, filenames[i]);
 			}
-			// Galima cia kaip nors pakeist gal?
+			
 			BASIC_CURSOR = cs[0];
 			LINE_CURSOR = cs[1];
 			BUCKET_CURSOR = cs[2];

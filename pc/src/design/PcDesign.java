@@ -53,8 +53,13 @@ import core.Stack;
 import core.StarShape;
 import core.TriangleShape;
 
-
+/**
+ * A class, responsible for PC GUI.
+ */
 public class PcDesign extends JFrame{
+	/**
+	 * A lightweight mouse listener, used for listening to shape changes
+	 */
 	public class BrushShapeListener extends LightweightMouseListener {
 		private String shapeName;
 		private Container parent;
@@ -75,20 +80,23 @@ public class PcDesign extends JFrame{
 		}
 	}
 	
+	// Window and other variables
 	protected static int frameWidth = 1280;
 	protected static int frameHeight = 720;
 	protected static final String RES_PATH = "res/";
-	protected static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
 	
+	// Menu related variables
 	protected JMenuBar menuBar;
 	protected JPanel drawContainerPanel;
 	protected JPanel drawPanel;
 	protected JPanel topPanel;
 
+	// Glass panel variables
 	protected JPanel glass;
 	protected PaintBase glassPaint;
 	protected BufferedImage glassImage;
         
+	// Drawing related variables
 	protected JColorChooser jcc;    
     protected File filetosave;
     protected File filetoload;
@@ -97,18 +105,20 @@ public class PcDesign extends JFrame{
 	protected BufferedImage drawing;
 	protected ClassLoader cl = getClass().getClassLoader();
 	protected String currentShape = "rect";
-	//protected CustomCursor cursor;
 	
+	// Image related variables
 	protected int maxImgW = 0;
 	protected int maxImgH = 0;
 	protected int imgW = 0;
 	protected int imgH = 0;
+	protected static final int IMAGE_FORMAT = BufferedImage.TYPE_INT_ARGB;
 	
 	protected int lastX = 0;
 	protected int lastY = 0;
 	protected int thisX = 0;
 	protected int thisY = 0;
 	
+	// Tool and undo-history related variables
 	protected Stack<BufferedImage> undoHistory;
 	protected Tools tool = Tools.BASIC;
 	protected Cursor cursor = CustomCursor.BASIC_CURSOR;
@@ -126,6 +136,9 @@ public class PcDesign extends JFrame{
 		undoHistory = new Stack<BufferedImage>();
 	}
 	
+	/**
+	 * Initializes a transparent (glass) panel over the top of all components. Used for temporary drawing (lines etc.)
+	 */
 	protected void initGlassPanel(){
 		glass = new JPanel(){
 			protected void paintComponent(Graphics g) {				
@@ -142,6 +155,11 @@ public class PcDesign extends JFrame{
 		glassPaint = new PaintBase((Graphics2D) glassImage.getGraphics());
 	}
 	
+	/**
+	 * Method draws a temporary line on the glass panel (for better line tool experience)
+	 * @param xy1 - from
+	 * @param xy2 - to
+	 */
 	protected void drawLineToolLine(int x1, int y1, int x2, int y2) {		
 		Rectangle r = drawContainerPanel.getBounds();
 		Rectangle rr = drawPanel.getBounds();
@@ -163,16 +181,21 @@ public class PcDesign extends JFrame{
 		glass.repaint();
 	}
 
+	/**
+	 * Initializes all window-related variables.
+	 */
 	protected void initFrame(int w, int h){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(w, h);
 		setTitle("The amazing paint program for PC v0.1");
 		setLocationRelativeTo(null);
 		initLayout();
-		// Set visible *ONLY* after initializing all components
 		setVisible(true);
 	}
 	
+	/**
+	 * Initializes component layout related variables
+	 */
 	protected void initLayout(){
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		menuBar = new JMenuBar();
@@ -190,6 +213,9 @@ public class PcDesign extends JFrame{
 		configureMenuBar();
 	}
 	
+	/**
+	 * Initializes all variables that are related to drawing panel
+	 */
 	protected void initDrawPanel(int w, int h){
         if (drawPanel != null){
 			drawContainerPanel.remove(drawPanel);
@@ -308,6 +334,9 @@ public class PcDesign extends JFrame{
 		drawContainerPanel.repaint();
 	}
 	
+	/**
+	 * Creates top panel (for color/size/shape components)
+	 */
 	protected void initTopPanel(){
 		topPanel = new JPanel();
 		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
@@ -456,6 +485,7 @@ public class PcDesign extends JFrame{
 		});
 	}
 	
+	// Methods to update paint object's brush parameters
 	protected void updateBrush(int size){
 		updateBrush(size, paint.getBrushRotation(), currentShape);
 	}
@@ -493,6 +523,9 @@ public class PcDesign extends JFrame{
 		}
 	}
 	
+	/**
+	 * Creates a menu bar and adds all menu items
+	 */
 	protected void configureMenuBar(){
 		JMenu file = new JMenu("File..");
 		menuBar.add(file);
@@ -767,6 +800,10 @@ public class PcDesign extends JFrame{
 		help.add(about);
 	}
 	
+	/**
+	 *  Initializes drawing panel with given image
+	 *  @param b - image to be added to drawing panel
+	 */
 	public void createImageFrom(BufferedImage b){
 		imgW = b.getWidth();
 		imgH = b.getHeight();
@@ -777,6 +814,11 @@ public class PcDesign extends JFrame{
 		drawPanel.repaint();
 	}
 	
+	/**
+	 * Creates a new blank image of given size
+	 * @param w - width
+	 * @param h - height
+	 */
 	public void createNewImage(int w, int h){
 		imgW = w;
 		imgH = h;
@@ -785,6 +827,9 @@ public class PcDesign extends JFrame{
 		createImageFrom(drawing);
 	}
 	
+	/**
+	 *  Show a dialog for creating new image
+	 */
 	public void promptCreateNewImage(){
 		if (drawing != null){
 			int result = throwUnsavedWarning();
@@ -825,12 +870,20 @@ public class PcDesign extends JFrame{
 		}				
 	}
 	
+	/**
+	 *  Show dialog, asking if a user wants to save current image
+	 * 	@return Selected option (check JOptionPane for values)
+	 */
 	public int throwUnsavedWarning(){
 		JLabel warning = new JLabel("You got some stuff you might want to save. Are you sure you want to continue?");
 		int result = JOptionPane.showConfirmDialog(null, warning, "Last warning!", JOptionPane.YES_NO_OPTION);
 		return result;
 	}
 	
+	/**
+	 * Clones current image
+	 * @return Shallow cloned (but not a reference) buffered image
+	 */
 	public BufferedImage cloneImage(){
 		 ColorModel cm = drawing.getColorModel();
 		 boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
@@ -838,10 +891,17 @@ public class PcDesign extends JFrame{
 		 return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
 	}
 
+	/**
+	 * Sets current tool
+	 * @param t - tool to be set
+	 */
 	public void setTool(Tools t){
 		tool = t;
 	}
 	
+	/**
+	 * Un-does the last action
+	 */
 	protected void undo(){
 		BufferedImage img = undoHistory.pop();
 		if(img != null){

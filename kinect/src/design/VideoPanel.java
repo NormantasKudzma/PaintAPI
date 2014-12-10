@@ -3,10 +3,12 @@ package design;
 import javax.media.opengl.GL2;
 
 import edu.ufl.digitalworlds.j4k.DepthMap;
-import edu.ufl.digitalworlds.j4k.Skeleton;
 import edu.ufl.digitalworlds.j4k.VideoFrame;
 import edu.ufl.digitalworlds.opengl.OpenGLPanel;
 
+/**
+ * A custom video panel class (made using example from the j4k website)
+ */
 public class VideoPanel extends OpenGLPanel {
 	private static final long serialVersionUID = -3881828084606461644L;
 	

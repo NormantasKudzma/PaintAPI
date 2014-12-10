@@ -7,6 +7,9 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
+/**
+ * Abstract class used to create custom shapes
+ */
 public class AbstractShape implements Shape{
 	public int x;
 	public int y;
@@ -49,7 +52,6 @@ public class AbstractShape implements Shape{
 
 	@Override
 	public boolean contains(Rectangle2D r) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -60,7 +62,6 @@ public class AbstractShape implements Shape{
 
 	@Override
 	public boolean contains(double x, double y, double w, double h) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -88,13 +89,11 @@ public class AbstractShape implements Shape{
 
 	@Override
 	public boolean intersects(Rectangle2D r) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean intersects(double x, double y, double w, double h) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

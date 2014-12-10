@@ -1,14 +1,8 @@
 package core;
 
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-
+/**
+ * Custom triangle shape class
+ */
 public class TriangleShape extends AbstractShape {
 	public static float [] ctrl = {0f, 1f, 0.5f, 0f, 1f, 1f};
 	
