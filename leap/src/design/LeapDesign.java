@@ -87,10 +87,12 @@ public class LeapDesign extends KinectDesign{
 	 * @param c - currently selected color
 	 * @return Index of color in the array (or -1 if there's no such color)
 	 */
-	int getColorNum(Color c){
-		for (int i = 0; i < kcc.all.length; i++){
-			if (kcc.all[i].getBackground() == c){
-				return i;
+	public int getColorNum(Color c){
+		if (c != null){			
+			for (int i = 0; i < kcc.all.length; i++){
+				if (kcc.all[i].getBackground() == c){
+					return i;
+				}
 			}
 		}
 		return -1;

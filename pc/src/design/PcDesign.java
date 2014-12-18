@@ -894,7 +894,7 @@ public class PcDesign extends JFrame{
 	
 	/**
 	 * Clones current image
-	 * @return Shallow cloned (but not a reference) buffered image
+	 * @return Shallow cloned (not a reference) buffered image
 	 */
 	public BufferedImage cloneImage(){
 		 ColorModel cm = drawing.getColorModel();
