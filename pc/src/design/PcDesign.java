@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -128,7 +129,12 @@ public class PcDesign extends JFrame{
 	}
 	
 	public PcDesign(int frameW, int frameH){
-		initFrame(frameW, frameH);
+		if (frameW >= frameWidth && frameH >= frameHeight){
+			initFrame(frameW, frameH);		
+		}
+		else {
+			initFrame(frameWidth, frameHeight);
+		}
 		paint = new PaintBase();
 		initGlassPanel();
 		initDrawPanel(imgW, imgH);
@@ -805,13 +811,15 @@ public class PcDesign extends JFrame{
 	 *  @param b - image to be added to drawing panel
 	 */
 	public void createImageFrom(BufferedImage b){
-		imgW = b.getWidth();
-		imgH = b.getHeight();
-		drawing = b;
-		if (paint != null){
-			paint.setGraphics((Graphics2D) b.getGraphics());
+		if (b != null){
+			imgW = b.getWidth();
+			imgH = b.getHeight();
+			drawing = b;
+			if (paint != null){
+				paint.setGraphics((Graphics2D) b.getGraphics());
+			}
+			drawPanel.repaint();
 		}
-		drawPanel.repaint();
 	}
 	
 	/**
@@ -820,11 +828,15 @@ public class PcDesign extends JFrame{
 	 * @param h - height
 	 */
 	public void createNewImage(int w, int h){
-		imgW = w;
-		imgH = h;
-		drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
-		drawing.getGraphics().fillRect(0, 0, w, h);
-		createImageFrom(drawing);
+		w = w > maxImgW ? maxImgW : w;
+		h = h > maxImgH ? maxImgH : h;
+		if (w > 0 && h > 0){
+			imgW = w;
+			imgH = h;
+			drawing = new BufferedImage(imgW, imgH, IMAGE_FORMAT);
+			drawing.getGraphics().fillRect(0, 0, w, h);
+			createImageFrom(drawing);
+		}
 	}
 	
 	/**
@@ -908,6 +920,10 @@ public class PcDesign extends JFrame{
 			initDrawPanel(img.getWidth(), img.getHeight());
 			createImageFrom(img);
 		}
+	}
+	
+	public Point getImageSize(){
+		return new Point(imgW, imgH);
 	}
 	
 	public static void main(String [] args){

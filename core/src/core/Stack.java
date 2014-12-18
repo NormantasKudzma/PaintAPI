@@ -12,9 +12,15 @@ public class Stack <T extends Object> {
 	public Stack(){
 		this(stackSize);
 	}
+	
 	public Stack(int size){
-		stack = (T[]) new Object[size];
-		stackSize = size;
+		if (size > 0){
+			stack = (T[]) new Object[size];
+			stackSize = size;
+		}
+		else {
+			throw new NegativeArraySizeException();
+		}
 	}
 
 	public void push(T variable){
@@ -32,5 +38,9 @@ public class Stack <T extends Object> {
 			else
 				stack[i] = null;
 		return last;
+	}
+	
+	public int getStackSize(){
+		return stackSize;
 	}
 }

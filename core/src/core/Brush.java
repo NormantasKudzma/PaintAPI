@@ -39,7 +39,9 @@ public class Brush {
 	}
 	
 	public void setSize(int size){
-		this.size = size;
+		if (size > 0){
+			this.size = size;
+		}
 	}
 	
 	public int getSize(){
@@ -51,7 +53,9 @@ public class Brush {
 	}
 
 	public void setColor(Color color) {
-		this.color = color;
+		if (color != null){
+			this.color = color;
+		}
 	}
 
 	public CustomStroke getCustomStroke() {
@@ -59,6 +63,8 @@ public class Brush {
 	}
 
 	public void setCustomStroke(CustomStroke cc) {
-		this.stroke = cc;
+		if (cc != null){
+			this.stroke = cc;
+		}
 	}
 }
