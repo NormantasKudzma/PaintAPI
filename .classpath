@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="pc/src"/>
+	<classpathentry kind="src" path="core/src"/>
+	<classpathentry kind="src" path="kinect/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/BombermanProject"/>
+	<classpathentry kind="lib" path="libs/ufdw.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="PaintAPI/libs"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/j4k-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/gluegen-rt-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="libs/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="libs/jogl-all.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
