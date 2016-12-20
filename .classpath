@@ -4,7 +4,6 @@
 	<classpathentry kind="src" path="core/src"/>
 	<classpathentry kind="src" path="kinect/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/BombermanProject"/>
 	<classpathentry kind="lib" path="libs/ufdw.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="PaintAPI/libs"/>
